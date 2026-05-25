@@ -1,126 +1,304 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<window>
+<window type="dialog">
     <defaultcontrol always="true">101</defaultcontrol>
+    <animation effect="fade" end="100" time="250">WindowOpen</animation>
+    <animation effect="fade" start="100" end="0" time="200">WindowClose</animation>
+
     <controls>
         <include>background_dialog</include>
+
+        <!-- main panel -->
         <control type="group">
-            <centerleft>50%</centerleft>
-            <centertop>50%</centertop>
-            <width>1200</width>
-            <height>800</height>
+            <left>100</left>
+            <top>100</top>
+            <width>1720</width>
+            <height>880</height>
+
             <control type="image">
+                <width>1720</width>
+                <height>880</height>
                 <aspectratio>stretch</aspectratio>
                 <texture colordiffuse="black">colors/white.png</texture>
                 <bordertexture colordiffuse="border">colors/white.png</bordertexture>
                 <bordersize>1</bordersize>
             </control>
+
+            <!-- poster / EPG image - no background frame -->
             <control type="group">
-                <left>20</left>
-                <width>850</width>
-                <control type="label">
-                    <top>20</top>
-                    <height>40</height>
-                    <font>regular30</font>
-                    <label>$INFO[Window.Property(datelong)], [COLOR active]$INFO[Window.Property(starttime)] - $INFO[Window.Property(endtime)][/COLOR] $INFO[Window.Property(runtime),(, min)]</label>
-                    <aligny>center</aligny>
+                <visible>!String.IsEmpty(Window.Property(epgeventicon)) | !String.IsEmpty(Window.Property(thumbnail))</visible>
+                <left>30</left>
+                <top>35</top>
+                <width>420</width>
+                <height>690</height>
+
+                <control type="image">
+                    <visible>!String.IsEmpty(Window.Property(epgeventicon))</visible>
+                    <width>420</width>
+                    <height>690</height>
+                    <aspectratio align="center" aligny="center">keep</aspectratio>
+                    <texture>$INFO[Window.Property(epgeventicon)]</texture>
                 </control>
-                <control type="label">
-                    <visible>String.IsEmpty(Window.Property(episodename))</visible>
-                    <top>80</top>
-                    <height>80</height>
-                    <font>light60</font>
+
+                <control type="image">
+                    <visible>String.IsEmpty(Window.Property(epgeventicon)) + !String.IsEmpty(Window.Property(thumbnail))</visible>
+                    <width>420</width>
+                    <height>690</height>
+                    <aspectratio align="center" aligny="center">keep</aspectratio>
+                    <texture>$INFO[Window.Property(thumbnail)]</texture>
+                </control>
+            </control>
+
+            <!-- fallback channel box when no EPG/poster image exists -->
+            <control type="group">
+                <visible>String.IsEmpty(Window.Property(epgeventicon)) + String.IsEmpty(Window.Property(thumbnail))</visible>
+                <left>30</left>
+                <top>35</top>
+                <width>420</width>
+                <height>300</height>
+
+                <control type="image">
+                    <width>420</width>
+                    <height>300</height>
+                    <aspectratio>stretch</aspectratio>
+                    <texture colordiffuse="33000000">colors/white.png</texture>
+                    <bordertexture colordiffuse="border">colors/white.png</bordertexture>
+                    <bordersize>1</bordersize>
+                </control>
+
+                <control type="image">
+                    <visible>!String.IsEmpty(Window.Property(channelicon))</visible>
+                    <left>35</left>
+                    <top>30</top>
+                    <width>350</width>
+                    <height>220</height>
+                    <aspectratio>keep</aspectratio>
+                    <texture>$INFO[Window.Property(channelicon)]</texture>
+                </control>
+
+                <control type="textbox">
+                    <visible>String.IsEmpty(Window.Property(channelicon))</visible>
+                    <left>25</left>
+                    <top>30</top>
+                    <width>370</width>
+                    <height>220</height>
+                    <align>center</align>
+                    <aligny>center</aligny>
+                    <font>light50</font>
                     <textcolor>active</textcolor>
+                    <shadowcolor>black</shadowcolor>
+                    <label>$INFO[Window.Property(channel)]</label>
+                </control>
+            </control>
+
+            <!-- time info under poster / fallback image -->
+            <control type="label">
+                <visible>!String.IsEmpty(Window.Property(timingtime))</visible>
+                <left>30</left>
+                <top>725</top>
+                <width>420</width>
+                <height>38</height>
+                <font>regular30</font>
+                <align>center</align>
+                <aligny>center</aligny>
+                <textcolor>white</textcolor>
+                <shadowcolor>black</shadowcolor>
+                <label>[COLOR active]$INFO[Window.Property(timinglabel)][/COLOR]   $INFO[Window.Property(timingtime)]</label>
+            </control>
+
+            <!-- content area inspired by wide media-info layout -->
+            <control type="group">
+                <left>500</left>
+                <top>35</top>
+                <width>1185</width>
+                <height>760</height>
+
+                <!-- title / subtitle -->
+                <control type="label">
+                    <top>18</top>
+                    <left>0</left>
+                    <width>970</width>
+                    <height>76</height>
+                    <font>light70</font>
+                    <textcolor>active</textcolor>
+                    <scroll>true</scroll>
                     <label>$INFO[Window.Property(title)]</label>
                     <aligny>center</aligny>
-                    <scroll>true</scroll>
                 </control>
-                <control type="group">
+
+                <control type="label">
                     <visible>!String.IsEmpty(Window.Property(episodename))</visible>
+                    <top>92</top>
+                    <left>2</left>
+                    <width>970</width>
+                    <height>38</height>
+                    <font>light36</font>
+                    <textcolor>white</textcolor>
+                    <scroll>true</scroll>
+                    <label>$INFO[Window.Property(episodename)]</label>
+                    <aligny>center</aligny>
+                </control>
+
+                <control type="label">
+                    <visible>!String.IsEmpty(Window.Property(runtime))</visible>
+                    <top>106</top>
+                    <left>2</left>
+                    <width>970</width>
+                    <height>34</height>
+                    <font>regular30</font>
+                    <textcolor>white</textcolor>
+                    <label>[COLOR active]Dĺžka[/COLOR]  $INFO[Window.Property(runtime)] min</label>
+                    <aligny>center</aligny>
+                </control>
+
+                <!-- channel logo in header -->
+                <control type="image">
+                    <visible>!String.IsEmpty(Window.Property(channelicon))</visible>
+                    <top>0</top>
+                    <right>0</right>
+                    <width>190</width>
+                    <height>115</height>
+                    <aspectratio>keep</aspectratio>
+                    <texture>$INFO[Window.Property(channelicon)]</texture>
+                </control>
+
+                <control type="textbox">
+                    <visible>String.IsEmpty(Window.Property(channelicon))</visible>
+                    <top>0</top>
+                    <right>0</right>
+                    <width>190</width>
+                    <height>115</height>
+                    <font>light40</font>
+                    <align>center</align>
+                    <aligny>center</aligny>
+                    <textcolor>active</textcolor>
+                    <shadowcolor>black</shadowcolor>
+                    <label>$INFO[Window.Property(channel)]</label>
+                </control>
+
+                <!-- metadata row -->
+                <control type="image">
+                    <top>165</top>
+                    <left>0</left>
+                    <width>1185</width>
+                    <height>1</height>
+                    <texture colordiffuse="border">colors/white.png</texture>
+                </control>
+
+                <control type="grouplist">
+                    <top>190</top>
+                    <left>0</left>
+                    <width>550</width>
+                    <height>90</height>
+                    <orientation>vertical</orientation>
+                    <itemgap>13</itemgap>
+                    <usecontrolcoords>true</usecontrolcoords>
+
                     <control type="label">
-                        <top>60</top>
-                        <height>80</height>
-                        <font>light60</font>
-                        <textcolor>active</textcolor>
-                        <label>$INFO[Window.Property(title)]</label>
-                        <aligny>center</aligny>
-                        <scroll>true</scroll>
+                        <height>34</height>
+                        <font>regular30</font>
+                        <textcolor>white</textcolor>
+                        <label>[COLOR active]Dátum[/COLOR]  $INFO[Window.Property(datelong)]</label>
                     </control>
                     <control type="label">
-                        <top>120</top>
-                        <height>80</height>
-                        <font>light36</font>
-                        <label>$INFO[Window.Property(episodename)]</label>
-                        <aligny>center</aligny>
-                        <scroll>true</scroll>
+                        <height>34</height>
+                        <font>regular30</font>
+                        <textcolor>white</textcolor>
+                        <label>[COLOR active]Čas[/COLOR]  $INFO[Window.Property(starttime)] - $INFO[Window.Property(endtime)]</label>
                     </control>
                 </control>
+
+                <control type="grouplist">
+                    <top>190</top>
+                    <left>590</left>
+                    <width>560</width>
+                    <height>90</height>
+                    <orientation>vertical</orientation>
+                    <itemgap>13</itemgap>
+                    <usecontrolcoords>true</usecontrolcoords>
+
+                    <control type="label">
+                        <visible>!String.IsEmpty(Window.Property(genre))</visible>
+                        <height>34</height>
+                        <font>regular30</font>
+                        <textcolor>white</textcolor>
+                        <label>[COLOR active]Žáner[/COLOR]  $INFO[Window.Property(genre)]</label>
+                    </control>
+                    <control type="label">
+                        <visible>!String.IsEmpty(Window.Property(year)) + !String.IsEqual(Window.Property(year),0)</visible>
+                        <height>34</height>
+                        <font>regular30</font>
+                        <textcolor>white</textcolor>
+                        <label>[COLOR active]Rok[/COLOR]  $INFO[Window.Property(year)]</label>
+                    </control>
+                    <control type="label">
+                        <visible>!String.IsEmpty(Window.Property(director))</visible>
+                        <height>34</height>
+                        <font>regular30</font>
+                        <textcolor>white</textcolor>
+                        <label>[COLOR active]Réžia[/COLOR]  $INFO[Window.Property(director)]</label>
+                    </control>
+                </control>
+
+                <!-- plot -->
+                <control type="textbox" id="100">
+                    <pagecontrol>100001</pagecontrol>
+                    <top>310</top>
+                    <left>0</left>
+                    <width>1145</width>
+                    <height>420</height>
+                    <font>regular30</font>
+                    <textcolor>white</textcolor>
+                    <scrolltime>200</scrolltime>
+                    <label>$INFO[Window.Property(plot)]</label>
+                </control>
+
+                <control type="scrollbar" id="100001">
+                    <top>310</top>
+                    <left>1160</left>
+                    <width>15</width>
+                    <height>420</height>
+                    <orientation>vertical</orientation>
+                    <onleft>101</onleft>
+                    <onright>101</onright>
+                    <texturesliderbackground colordiffuse="border" border="3">progress/texturebg_border_white.png</texturesliderbackground>
+                    <texturesliderbar colordiffuse="white" border="3,6,3,6">progress/texturebg_white.png</texturesliderbar>
+                    <texturesliderbarfocus colordiffuse="active" border="3,6,3,6">progress/texturebg_white.png</texturesliderbarfocus>
+                </control>
             </control>
+
+            <!-- bottom separator -->
             <control type="image">
-                <top>0</top>
-                <right>20</right>
-                <width>270</width>
-                <height>180</height>
-                <aspectratio>keep</aspectratio>
-                <texture>$INFO[Window.Property(channelicon)]</texture>
-            </control>
-            <control type="image">
-                <top>190</top>
+                <top>795</top>
+                <left>30</left>
+                <width>1655</width>
                 <height>1</height>
-                <aspectratio>stretch</aspectratio>
                 <texture colordiffuse="border">colors/white.png</texture>
             </control>
-            <control type="textbox" id="100">
-                <pagecontrol>100001</pagecontrol>
-                <left>20</left>
-                <top>200</top>
-                <width>640</width>
-                <height>550</height>
-                <font>regular30</font>
-                <textcolor>white</textcolor>
-                <scrolltime>200</scrolltime>
-                <label>$INFO[Window.Property(plot)]</label>
-            </control>
-            <include content="scrollbar">
-                <param name="controlled_id" value="100" />
-                <param name="onleft_id" value="101" />
-                <param name="onright_id" value="101" />
-                <param name="left" value="670" />
-                <param name="top" value="200" />
-                <param name="height" value="550" />
-            </include>
 
-            <control type="grouplist">
-                <left>720</left>
-                <top>200</top>
-                <width>460</width>
-                <height>550</height>
-                <orientation>vertical</orientation>
-                <itemgap>20</itemgap>
-                <control type="textbox">
-                    <visible>!String.IsEmpty(Window.Property(genre))</visible>
-                    <height>auto</height>
-                    <font>regular30</font>
-                    <label>[COLOR active]$LOCALIZE[515]:[/COLOR] $INFO[Window.Property(genre)]</label>
-                </control>
-                <control type="textbox">
-                    <visible>!String.IsEmpty(Window.Property(director))</visible>
-                    <height>auto</height>
-                    <font>regular30</font>
-                    <label>[COLOR active]$LOCALIZE[20339]:[/COLOR] $INFO[Window.Property(director)]</label>
-                </control>
-                <control type="textbox">
-                    <visible>!String.IsEmpty(Window.Property(cast))</visible>
-                    <height>auto</height>
-                    <font>regular30</font>
-                    <label>[COLOR active]$LOCALIZE[344]:[/COLOR] $INFO[Window.Property(cast)]</label>
-                </control>
-                <control type="textbox">
-                    <visible>!String.IsEmpty(Window.Property(year))</visible>
-                    <height>auto</height>
-                    <font>regular30</font>
-                    <label>[COLOR active]$LOCALIZE[345]:[/COLOR] $INFO[Window.Property(year)]</label>
-                </control>
-            </control>
+            <!-- TEST: progress bar under bottom separator -->
+			<control type="progress" id="601">
+				<visible>String.IsEqual(Window.Property(showprogress),true)</visible>
+				<left>30</left>
+				<top>810</top>
+				<width>420</width>
+				<height>12</height>
+				<texturebg border="3">progress/texturebg_border_white.png</texturebg>
+				<midtexture colordiffuse="active" border="5,3,5,3">progress/texturebg_white.png</midtexture>
+				<!-- ŽIADNY <info> ANI <percent> TAG TU NEBUDE -->
+			</control>
+
+			<control type="label">
+				<visible>String.IsEqual(Window.Property(showprogress),true)</visible>
+				<left>30</left>
+				<top>825</top>
+				<width>420</width>
+				<height>30</height>
+				<font>regular24</font>
+				<textcolor>white</textcolor>
+				<label>Progress: $INFO[Window.Property(progresspercentage)]%</label>
+			</control>
+
+            <!-- close button - original round style -->
             <control type="grouplist" id="101">
                 <bottom>-40</bottom>
                 <right>20</right>
@@ -139,67 +317,6 @@
                     <param name="iconsize">60</param>
                     <param name="iconoffset">20</param>
                 </include>
-                <include content="button_round">
-                    <param name="id">103</param>
-                    <param name="visible">System.HasAddon(service.kn.switchtimer)</param>
-                    <param name="onclick">RunScript(service.kn.switchtimer,action=add,channel=$INFO[Window.Property(channelid)],date=$INFO[Window.Property(switchdate)],title=$INFO[Window.Property(title)])</param>
-                    <param name="onclick2">Dialog.Close(all)</param>
-                    <param name="icon">icons/buttons/launch.png</param>
-                    <param name="radius">100</param>
-                    <param name="iconsize">60</param>
-                    <param name="iconoffset">20</param>
-                </include>
-                <include content="button_round">
-                    <param name="id">104</param>
-                    <param name="onclick">RunScript(script.unfussy.helper,action=record_runningat&bc_id=$INFO[Window.Property(broadcastid)])</param>
-                    <param name="onclick2">Dialog.Close(all)</param>
-                    <param name="icon">icons/pvr/timer.png</param>
-                    <param name="radius">100</param>
-                    <param name="iconsize">60</param>
-                    <param name="iconoffset">20</param>
-                </include>
-                <include content="button_round">
-                    <param name="id">105</param>
-                    <param name="visible">Integer.IsLess(Window.Property(runtime),75)</param>
-                    <param name="visible2">System.HasAddon(script.extendedinfo)</param>
-                    <param name="onclick" value="Action(close)" />
-                    <param name="onclick2" value="SetProperty(custombusy,true,home)" />
-                    <param name="onclick3" value="SetProperty(custombusyreason,tmdbtvshow,home)" />
-                    <param name="onclick4" value="SetProperty(custombusylabel,$INFO[Window.Property(title)],home)" />
-                    <param name="onclick5" value="RunScript(script.extendedinfo,info=extendedtvinfo,name=$INFO[Window.Property(title)])" />
-                    <param name="icon">icons/buttons/tmdb.png</param>
-                    <param name="radius">100</param>
-                    <param name="iconsize">70</param>
-                    <param name="iconoffset">15</param>
-                </include>
-                <include content="button_round">
-                    <param name="id">106</param>
-                    <param name="visible">Integer.IsGreater(Window.Property(runtime),74)</param>
-                    <param name="visible2">System.HasAddon(script.extendedinfo)</param>
-                    <param name="onclick" value="Action(close)" />
-                    <param name="onclick2" value="SetProperty(custombusy,true,home)" />
-                    <param name="onclick3" value="SetProperty(custombusyreason,tmdbmovie,home)" />
-                    <param name="onclick4" value="SetProperty(custombusylabel,$INFO[Window.Property(title)],home)" />
-                    <param name="onclick5" value="RunScript(script.extendedinfo,info=extendedinfo,name=$INFO[Window.Property(title)])" />
-                    <param name="icon">icons/buttons/tmdb.png</param>
-                    <param name="radius">100</param>
-                    <param name="iconsize">70</param>
-                    <param name="iconoffset">15</param>
-                </include>
-            </control>
-            <control type="label">
-                <visible>ControlGroup(101).HasFocus(0)</visible>
-                <top>845</top>
-                <left>0</left>
-                <width>500</width>
-                <height>30</height>
-                <align>center</align>
-                <aligny>center</aligny>
-                <textcolor>active</textcolor>
-                <shadowcolor>black</shadowcolor>
-                <font>regular24</font>
-                <label>$VAR[GTOInfoHelpText]</label>
-                <include>positioning_gto_buttons</include>
             </control>
         </control>
     </controls>
