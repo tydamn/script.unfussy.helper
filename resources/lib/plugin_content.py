@@ -5,7 +5,11 @@ from resources.lib.pvr_running_at import PVRRunningAt
 from resources.lib.pvr_timers import PVRTimers
 from resources.lib.pvr_channellist import PVRChannelList
 
-#######################################################################################
+episode_properties = [
+    'title', 'plot', 'plotoutline', 'season', 'episode', 'showtitle',
+    'tvshowid', 'thumbnail', 'fanart', 'art', 'file', 'playcount',
+    'lastplayed', 'resume', 'runtime', 'rating', 'firstaired', 'dateadded'
+]
 
 class PluginContent:
 
@@ -15,7 +19,7 @@ class PluginContent:
     def result(self):
         return self.resultlist
 
-    def fetchNextEpisodes( self ):
+    def fetchNextEpisodes(self):
         inprogress_shows = self.getInprogressTVShows()
         for show in inprogress_shows:
             tvshowid = int(show['tvshowid'])
@@ -23,28 +27,28 @@ class PluginContent:
             if not last_played_episode:
                 continue
             next_episode_id = self.getNextEpisode(tvshowid, last_played_episode)
-            if (next_episode_id > 0):
+            if next_episode_id > 0:
                 next_episode = self.getEpisode(next_episode_id)
-                append_items(self.resultlist,[next_episode],type='episodes')
+                append_items(self.resultlist, [next_episode], type='episodes')
 
-    def fetchActors( self, movie_id, tvshow ):
+    def fetchActors(self, movie_id, tvshow):
         cast = []
         if movie_id:
             query = json_call('VideoLibrary.GetMovieDetails',
-                    properties=['cast'],
-                    params={'movieid': int(movie_id)}
-                )
+                properties=['cast'],
+                params={'movieid': int(movie_id)}
+            )
             cast = query['result']['moviedetails']['cast']
         elif tvshow:
             query = json_call('VideoLibrary.GetTVShows',
-                    properties=['cast'],
-                    limit=1,
-                    query_filter={'operator': 'is', 'field': 'title', 'value': tvshow}
-                )
+                properties=['cast'],
+                limit=1,
+                query_filter={'operator': 'is', 'field': 'title', 'value': tvshow}
+            )
             cast = query['result']['tvshows'][0]['cast']
-        append_items(self.resultlist,cast,type='cast')
+        append_items(self.resultlist, cast, type='cast')
 
-    def fetchRunningAt( self, pointintime, channel_ids ):
+    def fetchRunningAt(self, pointintime, channel_ids):
         running_at = PVRRunningAt()
         ok = pvrAvailable()
         if not ok:
@@ -56,11 +60,10 @@ class PluginContent:
         for channel_id in channel_ids:
             bc = running_at.getBroadcastAt(pointintime, channel_id)
             if bc:
-                broadcast = {
+                broadcast_ids.append({
                     'broadcastid': bc['broadcastid'],
                     'channelid': channel_id
-                }
-                broadcast_ids.append(broadcast)
+                })
         broadcasts = running_at.getBroadcastsById(broadcast_ids)
         append_items(self.resultlist, broadcasts, type='broadcasts')
 
@@ -73,62 +76,119 @@ class PluginContent:
         timers = ti.fetchTimers()
         for t in timers:
             channel = ti.fetchChannel(t['channelid'])
-            if channel:
-                t['channelicon'] = channel['icon']
-            else:
-                t['channelicon'] = ''
+            t['channelicon'] = channel['icon'] if channel else ''
         append_items(self.resultlist, timers, type='timers')
 
+    def _dedupe_broadcast_items(self):
+        # Defensive cleanup for PVR backends that return the same EPG block repeatedly.
+        # We dedupe after append_items(), so we compare the final ListItem values that
+        # are actually used by the skin/list.
+        seen = set()
+        cleaned = []
+
+        for item in self.resultlist:
+            try:
+                url, li_item, is_folder = item
+
+                title = li_item.getLabel() or ''
+                date = li_item.getProperty('date') or ''
+                starttime = li_item.getProperty('starttime') or ''
+                endtime = li_item.getProperty('endtime') or ''
+                broadcastid = li_item.getProperty('broadcastid') or ''
+
+                # Prefer the visible row identity. Do NOT rely only on broadcastid,
+                # because some PVR backends can repeat the same EPG item with a new id.
+                key = (
+                    title.strip().lower(),
+                    date.strip(),
+                    starttime.strip(),
+                    endtime.strip()
+                )
+
+                # If the item has almost no time metadata, keep broadcastid in the key
+                # so unrelated empty items are not accidentally collapsed.
+                if not any(key):
+                    key = ('broadcastid', broadcastid)
+
+                if key in seen:
+                    log('fetchBroadcasts: duplicate EPG item removed: %s %s %s-%s'
+                        % (title, date, starttime, endtime), xbmc.LOGDEBUG)
+                    continue
+
+                seen.add(key)
+                cleaned.append(item)
+            except Exception:
+                # If something unexpected is in resultlist, keep it rather than breaking UI.
+                cleaned.append(item)
+
+        self.resultlist = cleaned
+
     def fetchBroadcasts(self, channel_num, channel_ids):
-        channel_id = -1
+        channel_id = None
+
         try:
-            channel_id = channel_ids[channel_num]
+            channel_id = channel_ids.get(str(channel_num))
         except Exception:
+            channel_id = None
+
+        if channel_id is None:
+            try:
+                channel_id = channel_ids.get(channel_num)
+            except Exception:
+                channel_id = None
+
+        if channel_id is None:
+            log('fetchBroadcasts: missing channel_id for channel_num=%s channel_ids=%s' % (channel_num, channel_ids), xbmc.LOGWARNING)
             return
+
         cl = PVRChannelList()
         broadcasts = cl.fetchBroadcasts(channel_id)
-        append_items(self.resultlist, broadcasts, type='broadcasts_short')
 
-    #######################################################################################
-    # private
-    #######################################################################################
+        before = len(self.resultlist)
+        append_items(self.resultlist, broadcasts, type='broadcasts_short')
+        after_append = len(self.resultlist)
+
+        self._dedupe_broadcast_items()
+        after_dedupe = len(self.resultlist)
+
+        log('fetchBroadcasts: channel_id=%s broadcasts=%s result_before=%s after_append=%s after_dedupe=%s'
+            % (channel_id, len(broadcasts), before, after_append, after_dedupe), xbmc.LOGDEBUG)
+
     def getInprogressTVShows(self):
         query = json_call('VideoLibrary.GetTVShows',
-                            properties=[], 
-                            limit=25,
-                            sort={"method": "lastplayed", "order": "descending"},
-                            query_filter={'field': 'inprogress', 'operator': 'true', 'value': ''}
-                        )
+            properties=[],
+            limit=25,
+            sort={"method": "lastplayed", "order": "descending"},
+            query_filter={'field': 'inprogress', 'operator': 'true', 'value': ''}
+        )
         try:
-            tvshows = query['result']['tvshows']
+            return query['result']['tvshows']
         except Exception:
             log('getNextEpisodes: No Inprogress TVShows found.')
             return []
-        return tvshows
 
-    def getLastPlayedEpisode( self, tvshowid ):
+    def getLastPlayedEpisode(self, tvshowid):
         query = json_call('VideoLibrary.GetEpisodes',
-                            properties=['season'],
-                            limit=1,
-                            sort={"method": "lastplayed", "order": "descending"},
-                            query_filter={"field":"playcount", "operator":"isnot", "value":"0"},
-                            params={'tvshowid': tvshowid}
-                        )
+            properties=['season'],
+            limit=1,
+            sort={"method": "lastplayed", "order": "descending"},
+            query_filter={"field": "playcount", "operator": "isnot", "value": "0"},
+            params={'tvshowid': tvshowid}
+        )
         try:
-            last_played = query['result']['episodes']
+            return query['result']['episodes'][0]
         except Exception:
             log('getLastPlayedEpisode: No Last Played Episode found.')
             return 0
-        return last_played[0]
 
-    def getNextEpisode( self, tvshowid, last_played_episode ):
+    def getNextEpisode(self, tvshowid, last_played_episode):
         season = last_played_episode['season'] - 1
         query = json_call('VideoLibrary.GetEpisodes',
-                            properties=[],
-                            sort={"method": "episode"},
-                            query_filter={"field":"season", "operator":"greaterthan", "value":"%s" % season},
-                            params={'tvshowid': tvshowid}
-                        )
+            properties=[],
+            sort={"method": "episode"},
+            query_filter={"field": "season", "operator": "greaterthan", "value": "%s" % season},
+            params={'tvshowid': tvshowid}
+        )
         try:
             episodes = query['result']['episodes']
         except Exception:
@@ -136,19 +196,18 @@ class PluginContent:
 
         found = False
         for episode in episodes:
-            if (found):
+            if found:
                 return episode['episodeid']
-            if (episode['episodeid'] == last_played_episode['episodeid']):
+            if episode['episodeid'] == last_played_episode['episodeid']:
                 found = True
         return 0
 
-    def getEpisode( self, episodeid ):
+    def getEpisode(self, episodeid):
         query = json_call('VideoLibrary.GetEpisodeDetails',
-                            properties=episode_properties,
-                            params={'episodeid': episodeid}
-                        )
+            properties=episode_properties,
+            params={'episodeid': episodeid}
+        )
         try:
-            episode = query['result']['episodedetails']
+            return query['result']['episodedetails']
         except Exception:
             return {}
-        return episode

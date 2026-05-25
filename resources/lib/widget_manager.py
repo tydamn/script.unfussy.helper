@@ -495,7 +495,7 @@ class WidgetManager:
                             'label': ADDON.getLocalizedString(30263),
                             'desc': '',
                             'widget': 'favorites',
-                            'width': 260,
+                            'width': 310,
                             'height': 250
                         }
                     ]
@@ -511,14 +511,14 @@ class WidgetManager:
                             'desc': '',
                             'widget': 'addonpath_thumb',
                             'width': 260,
-                            'height': 260
+                            'height': 230
                         },
                         {
                             'label': ADDON.getLocalizedString(30282),
                             'desc': '',
                             'widget': 'addonpath_thumb_large',
-                            'width': 310,
-                            'height': 300
+                            'width': 312,
+                            'height': 250
                         },
                         {
                             'label': ADDON.getLocalizedString(30264),
@@ -540,7 +540,7 @@ class WidgetManager:
                             'label': ADDON.getLocalizedString(30263),
                             'desc': '',
                             'widget': 'favorites',
-                            'width': 260,
+                            'width': 312,
                             'height': 250
                         }
                     ]
@@ -583,10 +583,10 @@ class WidgetManager:
                             'height': 300
                         }
                     ]
-                }            
+                }
             ]
         )
-    
+
     def isAddonWidget(self, cat, type):
         if cat == 5 and type == 0:
             return True
@@ -596,7 +596,7 @@ class WidgetManager:
         if cat == 0 and type == 0:
             return True
         return False
-    
+
     def staticContent(self, cat, type):
         if 'static_content' in self.types[cat][type]:
             return True
