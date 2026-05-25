@@ -1,1 +1,626 @@
+# Addon Name: script.skinschaumermal.helper
+# Addon id: script.skinschaumermal.helper
+# Addon version: 0.0.1
+# Addon Provider: Louis Braun
+msgid ""
+msgstr ""
+"Project-Id-Version: XBMC-Addons\n"
+"Report-Msgid-Bugs-To: alanwww1@xbmc.org\n"
+"POT-Creation-Date: 2019-07-04 08:37+0000\n"
+"PO-Revision-Date: 2026-05-22 12:00+0200\n"
+"Last-Translator: ChatGPT <noreply@openai.com>\n"
+"Language-Team: Slovak\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: sk_SK\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n>=2 && n<=4 ? 1 : 2)\n"
 
+msgctxt "Addon Summary"
+msgid "Helper Script for Schaumermal Skin"
+msgstr "Pomocný skript pre skin Schaumermal"
+
+msgctxt "Addon Description"
+msgid "Helper Script for Schaumermal Skin"
+msgstr "Pomocný skript pre skin Schaumermal"
+
+
+msgctxt "#30001"
+msgid "Main Menu"
+msgstr "Hlavné menu"
+
+msgctxt "#30002"
+msgid "Sub Menu"
+msgstr "Podmenu"
+
+msgctxt "#30003"
+msgid "Widgets"
+msgstr "Widgety"
+
+msgctxt "#30004"
+msgid "Widget"
+msgstr "Widget"
+
+msgctxt "#30005"
+msgid "unlimited"
+msgstr "neobmedzene"
+
+msgctxt "#30006"
+msgid "Description"
+msgstr "Popis"
+
+msgctxt "#30007"
+msgid "Edit Description"
+msgstr "Upraviť popis"
+
+msgctxt "#30008"
+msgid "Icon"
+msgstr "Ikona"
+
+msgctxt "#30009"
+msgid "Change Icon"
+msgstr "Zmeniť ikonu"
+
+msgctxt "#30010"
+msgid "Show Element"
+msgstr "Zobraziť prvok"
+
+msgctxt "#30011"
+msgid "Action Type"
+msgstr "Typ akcie"
+
+msgctxt "#30012"
+msgid "Action"
+msgstr "Akcia"
+
+msgctxt "#30013"
+msgid "Change Action"
+msgstr "Zmeniť akciu"
+
+msgctxt "#30014"
+msgid "Show Widget"
+msgstr "Zobraziť widget"
+
+msgctxt "#30015"
+msgid "Header"
+msgstr "Nadpis"
+
+msgctxt "#30016"
+msgid "edit Header"
+msgstr "upraviť nadpis"
+
+msgctxt "#30017"
+msgid "Element Limit"
+msgstr "Limit prvkov"
+
+msgctxt "#30018"
+msgid "edit Limit"
+msgstr "upraviť limit"
+
+msgctxt "#30019"
+msgid "Select Limit"
+msgstr "Vybrať limit"
+
+msgctxt "#30020"
+msgid "move up"
+msgstr "posunúť hore"
+
+msgctxt "#30021"
+msgid "move down"
+msgstr "posunúť dole"
+
+msgctxt "#30022"
+msgid "new element"
+msgstr "nový prvok"
+
+msgctxt "#30023"
+msgid "new submenu"
+msgstr "nové podmenu"
+
+msgctxt "#30024"
+msgid "delete element"
+msgstr "vymazať prvok"
+
+msgctxt "#30025"
+msgid "back to default"
+msgstr "obnoviť predvolené"
+
+msgctxt "#30026"
+msgid "new widget"
+msgstr "nový widget"
+
+msgctxt "#30027"
+msgid "delete widget"
+msgstr "vymazať widget"
+
+msgctxt "#30028"
+msgid "enter description"
+msgstr "zadať popis"
+
+msgctxt "#30029"
+msgid "select new icon"
+msgstr "vybrať novú ikonu"
+
+msgctxt "#30030"
+msgid "enter header"
+msgstr "zadať nadpis"
+
+msgctxt "#30031"
+msgid "Widget Category"
+msgstr "Kategória widgetu"
+
+msgctxt "#30032"
+msgid "change widget"
+msgstr "zmeniť widget"
+
+msgctxt "#30033"
+msgid "new widget"
+msgstr "nový widget"
+
+msgctxt "#30034"
+msgid "selected channels"
+msgstr "vybrané kanály"
+
+msgctxt "#30035"
+msgid "select channels"
+msgstr "vybrať kanály"
+
+msgctxt "#30036"
+msgid "point in time"
+msgstr "konkrétny čas"
+
+msgctxt "#30037"
+msgid "select point in time"
+msgstr "vybrať konkrétny čas"
+
+msgctxt "#30100"
+msgid "Link to Video Database"
+msgstr "Odkaz na databázu videí"
+
+msgctxt "#30101"
+msgid "Link to TV Show Database"
+msgstr "Odkaz na databázu seriálov"
+
+msgctxt "#30102"
+msgid "Link to Music Database"
+msgstr "Odkaz na databázu hudby"
+
+msgctxt "#30103"
+msgid "Link to Music Video Database"
+msgstr "Odkaz na databázu hudobných videí"
+
+msgctxt "#30104"
+msgid "Live TV Window"
+msgstr "Okno živej TV"
+
+msgctxt "#30105"
+msgid "Live Radio Window"
+msgstr "Okno živého rádia"
+
+msgctxt "#30106"
+msgid "Common Window"
+msgstr "Všeobecné okno"
+
+msgctxt "#30107"
+msgid "Execute Command"
+msgstr "Spustiť príkaz"
+
+msgctxt "#30108"
+msgid "Link to Video Playlist"
+msgstr "Odkaz na video playlist"
+
+msgctxt "#30109"
+msgid "Link to Music Playlist"
+msgstr "Odkaz na hudobný playlist"
+
+msgctxt "#30110"
+msgid "Start Addon"
+msgstr "Spustiť doplnok"
+
+msgctxt "#30111"
+msgid "New Element"
+msgstr "Nový prvok"
+
+msgctxt "#30112"
+msgid "Really?"
+msgstr "Naozaj?"
+
+msgctxt "#30113"
+msgid "Do you really want to delete"
+msgstr "Naozaj chcete vymazať"
+
+msgctxt "#30114"
+msgid "The submenu will also be deleted!"
+msgstr "Podmenu bude tiež vymazané!"
+
+msgctxt "#30115"
+msgid "Do you really want to set the menu back to default?\nAll customizations are lost!"
+msgstr "Naozaj chcete obnoviť menu na predvolené nastavenia?\\nVšetky úpravy sa stratia!"
+
+msgctxt "#30116"
+msgid "undefined"
+msgstr "nedefinované"
+
+msgctxt "#30117"
+msgid "Do you really want to set all widgets back to default?\nAll customizations are lost!"
+msgstr "Naozaj chcete obnoviť všetky widgety na predvolené nastavenia?\\nVšetky úpravy sa stratia!"
+
+msgctxt "#30200"
+msgid "Live TV Widget"
+msgstr "Widget živej TV"
+
+msgctxt "#30201"
+msgid "Movie Widget"
+msgstr "Widget filmov"
+
+msgctxt "#30202"
+msgid "Tv Show Widget"
+msgstr "Widget seriálov"
+
+msgctxt "#30203"
+msgid "Music Widget"
+msgstr "Widget hudby"
+
+msgctxt "#30204"
+msgid "Music Video Widget"
+msgstr "Widget hudobných videí"
+
+msgctxt "#30205"
+msgid "Addon Widget"
+msgstr "Widget doplnkov"
+
+msgctxt "#30207"
+msgid "Weather Widget"
+msgstr "Widget počasia"
+
+msgctxt "#30208"
+msgid "Live TV"
+msgstr "Živá TV"
+
+msgctxt "#30209"
+msgid "last watched live tv channels"
+msgstr "naposledy sledované TV kanály"
+
+msgctxt "#30210"
+msgid "TV Recordings"
+msgstr "TV nahrávky"
+
+msgctxt "#30211"
+msgid "newest tv recordings"
+msgstr "najnovšie TV nahrávky"
+
+msgctxt "#30212"
+msgid "In Progress Movies"
+msgstr "Rozpozerané filmy"
+
+msgctxt "#30213"
+msgid "movies currently in progress"
+msgstr "aktuálne rozpozerané filmy"
+
+msgctxt "#30214"
+msgid "New Movies"
+msgstr "Nové filmy"
+
+msgctxt "#30215"
+msgid "latest movies added to database"
+msgstr "najnovšie filmy pridané do databázy"
+
+msgctxt "#30216"
+msgid "New Episodes"
+msgstr "Nové epizódy"
+
+msgctxt "#30217"
+msgid "latest tv show episodes added to database"
+msgstr "najnovšie epizódy seriálov pridané do databázy"
+
+msgctxt "#30218"
+msgid "Next Episodes"
+msgstr "Ďalšie epizódy"
+
+msgctxt "#30219"
+msgid "next pending episode from in progress series"
+msgstr "ďalšia čakajúca epizóda z rozpozeraných seriálov"
+
+msgctxt "#30220"
+msgid "New Music Videos"
+msgstr "Nové hudobné videá"
+
+msgctxt "#30221"
+msgid "newest music videos added to database"
+msgstr "najnovšie hudobné videá pridané do databázy"
+
+msgctxt "#30222"
+msgid "Random Music Videos"
+msgstr "Náhodné hudobné videá"
+
+msgctxt "#30223"
+msgid "a random selection of music videos in the database"
+msgstr "náhodný výber hudobných videí z databázy"
+
+msgctxt "#30224"
+msgid "broadcasts starting at..."
+msgstr "vysielania začínajúce o..."
+
+msgctxt "#30225"
+msgid "broadcasts at a certain time on intended channels"
+msgstr "vysielania v určenom čase na vybraných kanáloch"
+
+msgctxt "#30226"
+msgid "TV Timers"
+msgstr "TV časovače"
+
+msgctxt "#30227"
+msgid "active tv timers"
+msgstr "aktívne TV časovače"
+
+msgctxt "#30228"
+msgid "Addons"
+msgstr "Doplnky"
+
+msgctxt "#30229"
+msgid "arbitrary list of installed addons"
+msgstr "ľubovoľný zoznam nainštalovaných doplnkov"
+
+msgctxt "#30230"
+msgid "Favorites"
+msgstr "Obľúbené"
+
+msgctxt "#30231"
+msgid "list of all favorites set up in Kodi"
+msgstr "zoznam všetkých obľúbených položiek nastavených v Kodi"
+
+msgctxt "#30232"
+msgid "selected addons"
+msgstr "vybrané doplnky"
+
+msgctxt "#30233"
+msgid "select addons"
+msgstr "vybrať doplnky"
+
+msgctxt "#30234"
+msgid "weather forecast - today"
+msgstr "predpoveď počasia – dnes"
+
+msgctxt "#30235"
+msgid "hourly weather forecast"
+msgstr "hodinová predpoveď počasia"
+
+msgctxt "#30236"
+msgid "weather forecast - next days"
+msgstr "predpoveď počasia – ďalšie dni"
+
+msgctxt "#30237"
+msgid "daily weather forecast"
+msgstr "denná predpoveď počasia"
+
+msgctxt "#30238"
+msgid "unplayed albums"
+msgstr "neprehrané albumy"
+
+msgctxt "#30239"
+msgid "unplayed random music albums"
+msgstr "náhodné neprehrané hudobné albumy"
+
+msgctxt "#30240"
+msgid "most played albums"
+msgstr "najhranejšie albumy"
+
+msgctxt "#30241"
+msgid "most played albums in music database"
+msgstr "najhranejšie albumy v hudobnej databáze"
+
+msgctxt "#30242"
+msgid "start live tv"
+msgstr "spustiť živú TV"
+
+msgctxt "#30243"
+msgid "start live radio"
+msgstr "spustiť živé rádio"
+
+msgctxt "#30244"
+msgid "start dvd"
+msgstr "spustiť DVD"
+
+msgctxt "#30245"
+msgid "random albums"
+msgstr "náhodné albumy"
+
+msgctxt "#30246"
+msgid "random albums from music database"
+msgstr "náhodné albumy z hudobnej databázy"
+
+msgctxt "#30247"
+msgid "smart movie playlist"
+msgstr "inteligentný playlist filmov"
+
+msgctxt "#30248"
+msgid "self defined smart playlist for movies"
+msgstr "vlastný inteligentný playlist pre filmy"
+
+msgctxt "#30249"
+msgid "smart playlist"
+msgstr "inteligentný playlist"
+
+msgctxt "#30250"
+msgid "select smart playlist"
+msgstr "vybrať inteligentný playlist"
+
+msgctxt "#30251"
+msgid "smart tvshow playlist"
+msgstr "inteligentný playlist seriálov"
+
+msgctxt "#30252"
+msgid "self defined smart playlist for tvshows"
+msgstr "vlastný inteligentný playlist pre seriály"
+
+msgctxt "#30253"
+msgid "smart episode playlist"
+msgstr "inteligentný playlist epizód"
+
+msgctxt "#30254"
+msgid "self defined smart playlist for tvshow episodes"
+msgstr "vlastný inteligentný playlist pre epizódy seriálov"
+
+msgctxt "#30255"
+msgid "smart musicvideo playlist"
+msgstr "inteligentný playlist hudobných videí"
+
+msgctxt "#30256"
+msgid "self defined smart playlist for musicvideos"
+msgstr "vlastný inteligentný playlist pre hudobné videá"
+
+msgctxt "#30257"
+msgid "music playlist - songs"
+msgstr "hudobný playlist – skladby"
+
+msgctxt "#30258"
+msgid "self defined playlist for songs"
+msgstr "vlastný playlist pre skladby"
+
+msgctxt "#30259"
+msgid "music playlist - albums"
+msgstr "hudobný playlist – albumy"
+
+msgctxt "#30260"
+msgid "self defined playlist for albums"
+msgstr "vlastný playlist pre albumy"
+
+msgctxt "#30261"
+msgid "music playlist - artists"
+msgstr "hudobný playlist – interpreti"
+
+msgctxt "#30262"
+msgid "self defined playlist for artists"
+msgstr "vlastný playlist pre interpretov"
+
+msgctxt "#30263"
+msgid "square"
+msgstr "štvorec"
+
+msgctxt "#30264"
+msgid "poster"
+msgstr "poster"
+
+msgctxt "#30265"
+msgid "landscape"
+msgstr "na šírku"
+
+msgctxt "#30266"
+msgid "with channel icon"
+msgstr "s ikonou kanála"
+
+msgctxt "#30267"
+msgid "with epg poster"
+msgstr "s EPG posterom"
+
+msgctxt "#30268"
+msgid "GTO Addon widget"
+msgstr "Widget doplnku GTO"
+
+msgctxt "#30269"
+msgid "with movie poster"
+msgstr "s filmovým posterom"
+
+msgctxt "#30270"
+msgid "with season poster and episode thumb"
+msgstr "s posterom série a náhľadom epizódy"
+
+msgctxt "#30271"
+msgid "with series poster"
+msgstr "s posterom seriálu"
+
+msgctxt "#30272"
+msgid "with musicvideo poster"
+msgstr "s posterom hudobného videa"
+
+msgctxt "#30273"
+msgid "use as widget path"
+msgstr "použiť ako cestu widgetu"
+
+msgctxt "#30274"
+msgid "path name"
+msgstr "názov cesty"
+
+msgctxt "#30275"
+msgid "addon path"
+msgstr "cesta doplnku"
+
+msgctxt "#30276"
+msgid "path to an addon folder"
+msgstr "cesta k priečinku doplnku"
+
+msgctxt "#30277"
+msgid "path"
+msgstr "cesta"
+
+msgctxt "#30278"
+msgid "edit path"
+msgstr "upraviť cestu"
+
+msgctxt "#30279"
+msgid "no paths defined"
+msgstr "nie sú definované žiadne cesty"
+
+msgctxt "#30280"
+msgid "Please first define addon pathes by navigating to this path in the corresponding addon and activate it via the context menu."
+msgstr "Najprv definujte cesty doplnkov tak, že prejdete na danú cestu v príslušnom doplnku a aktivujete ju cez kontextové menu."
+
+msgctxt "#30281"
+msgid "select addon path"
+msgstr "vybrať cestu doplnku"
+
+msgctxt "#30282"
+msgid "landscape large"
+msgstr "veľký formát na šírku"
+
+msgctxt "#30283"
+msgid "manage addon paths"
+msgstr "spravovať cesty doplnkov"
+
+msgctxt "#30284"
+msgid "select addon paths to delete"
+msgstr "vybrať cesty doplnkov na vymazanie"
+
+msgctxt "#30285"
+msgid "sort order"
+msgstr "poradie zoradenia"
+
+msgctxt "#30286"
+msgid "last seen"
+msgstr "naposledy zobrazené"
+
+msgctxt "#30287"
+msgid "channel number"
+msgstr "číslo kanála"
+
+msgctxt "#30288"
+msgid "with epg images"
+msgstr "s EPG obrázkami"
+
+msgctxt "#30289"
+msgid "Video Playlists"
+msgstr "Video playlisty"
+
+msgctxt "#30290"
+msgid "Music Playlists"
+msgstr "Hudobné playlisty"
+
+msgctxt "#30291"
+msgid "Icon Size"
+msgstr "Veľkosť ikony"
+
+msgctxt "#30292"
+msgid "small"
+msgstr "malá"
+
+msgctxt "#30293"
+msgid "medium"
+msgstr "stredná"
+
+msgctxt "#30294"
+msgid "large"
+msgstr "veľká"
+
+msgctxt "#30295"
+msgid "with fanart"
+msgstr "s fanartom"
