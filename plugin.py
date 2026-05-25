@@ -35,7 +35,12 @@ class Main:
             pc.fetchBroadcasts(self.params.get('channelnum'), json.loads(channel_ids))
 
         xbmcplugin.addDirectoryItems(self.widget_handle, pc.result())
-        xbmcplugin.endOfDirectory(handle=self.widget_handle)
+        xbmcplugin.endOfDirectory(
+            handle=self.widget_handle,
+            succeeded=True,
+            updateListing=True,
+            cacheToDisc=False
+        )
 
         if self.info == 'getbroadcasts':
             xbmcgui.Window(10700).clearProperty('channel_change')
