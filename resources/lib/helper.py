@@ -101,6 +101,156 @@ def getTimeFromString(str_time, time_format=None, utc_offset=None):
 def getUtcOffset():
     return datetime.now() - datetime.utcnow()
 
+def _to_int(value, default=0):
+    try:
+        if value is None or value == '':
+            return default
+        return int(float(value))
+    except Exception:
+        return default
+
+def _to_float(value, default=0.0):
+    try:
+        if value is None or value == '':
+            return default
+        return float(value)
+    except Exception:
+        return default
+
+def _to_list(value):
+    if value is None:
+        return []
+    if isinstance(value, list):
+        return [str(v).strip() for v in value if str(v).strip()]
+    value = str(value).strip()
+    if not value:
+        return []
+    return [v.strip() for v in value.split(',') if v.strip()]
+
+def _safe_tag_call(tag, method, *args):
+    try:
+        fn = getattr(tag, method, None)
+        if fn:
+            fn(*args)
+            return True
+    except Exception as e:
+        log('InfoTagVideo.%s failed: %s' % (method, e), xbmc.LOGDEBUG)
+    return False
+
+def set_video_info(li_item, info):
+    """
+    Kodi 20+ nahrada za ListItem.setInfo('video', ...).
+    Ak by bezal starsi Kodi bez getVideoInfoTag(), pouzije sa stary fallback.
+    """
+    try:
+        tag = li_item.getVideoInfoTag()
+    except Exception:
+        li_item.setInfo('video', info)
+        return
+
+    title = info.get('Title', '')
+    if title:
+        _safe_tag_call(tag, 'setTitle', str(title))
+
+    originaltitle = info.get('OriginalTitle', '')
+    if originaltitle:
+        _safe_tag_call(tag, 'setOriginalTitle', str(originaltitle))
+
+    tvshowtitle = info.get('TVShowTitle', '')
+    if tvshowtitle:
+        _safe_tag_call(tag, 'setTvShowTitle', str(tvshowtitle))
+
+    year = info.get('Year', '')
+    if year not in [None, '']:
+        _safe_tag_call(tag, 'setYear', _to_int(year))
+
+    genres = _to_list(info.get('Genre', ''))
+    if genres:
+        _safe_tag_call(tag, 'setGenres', genres)
+
+    studios = _to_list(info.get('Studio', ''))
+    if studios:
+        _safe_tag_call(tag, 'setStudios', studios)
+
+    countries = _to_list(info.get('Country', ''))
+    if countries:
+        _safe_tag_call(tag, 'setCountries', countries)
+
+    plot = info.get('Plot', '')
+    if plot:
+        _safe_tag_call(tag, 'setPlot', str(plot))
+
+    plotoutline = info.get('PlotOutline', '')
+    if plotoutline:
+        _safe_tag_call(tag, 'setPlotOutline', str(plotoutline))
+
+    mpaa = info.get('MPAA', '')
+    if mpaa:
+        _safe_tag_call(tag, 'setMpaa', str(mpaa))
+
+    playcount = info.get('Playcount', None)
+    if playcount is not None:
+        _safe_tag_call(tag, 'setPlaycount', _to_int(playcount))
+
+    season = info.get('Season', None)
+    if season is not None:
+        _safe_tag_call(tag, 'setSeason', _to_int(season))
+
+    episode = info.get('Episode', None)
+    if episode is not None:
+        _safe_tag_call(tag, 'setEpisode', _to_int(episode))
+
+    duration = info.get('Duration', None)
+    if duration is not None:
+        _safe_tag_call(tag, 'setDuration', _to_int(duration))
+
+    trailer = info.get('Trailer', '')
+    if trailer:
+        _safe_tag_call(tag, 'setTrailer', str(trailer))
+
+    lastplayed = info.get('LastPlayed', '')
+    if lastplayed:
+        _safe_tag_call(tag, 'setLastPlayed', str(lastplayed))
+
+    premiered = info.get('Premiered', '')
+    if premiered:
+        _safe_tag_call(tag, 'setPremiered', str(premiered))
+        _safe_tag_call(tag, 'setFirstAired', str(premiered))
+
+    dateadded = info.get('DateAdded', '')
+    if dateadded:
+        _safe_tag_call(tag, 'setDateAdded', str(dateadded))
+
+    imdbnumber = info.get('IMDBNumber', '')
+    if imdbnumber:
+        _safe_tag_call(tag, 'setIMDBNumber', str(imdbnumber))
+
+    rating = info.get('Rating', '')
+    votes = _to_int(info.get('Votes', 0))
+    if rating not in [None, '']:
+        _safe_tag_call(tag, 'setRating', _to_float(rating), votes, '', True)
+
+    cast = info.get('Cast', [])
+    if cast:
+        # Kodi 20+ ocakava zoznam actor objektov; ak sa nepodari, preskocime len cast.
+        actors = []
+        for idx, actor in enumerate(cast):
+            try:
+                if isinstance(actor, dict):
+                    name = actor.get('name', '')
+                    role = actor.get('role', '')
+                    thumb = actor.get('thumbnail', '')
+                else:
+                    name = str(actor)
+                    role = ''
+                    thumb = ''
+                if name and hasattr(xbmc, 'Actor'):
+                    actors.append(xbmc.Actor(name, role, idx, thumb))
+            except Exception:
+                pass
+        if actors:
+            _safe_tag_call(tag, 'setCast', actors)
+
 ########################
 # Properties
 ########################
@@ -151,7 +301,7 @@ def parse_movies(li, item):
     cast = [c.get('name', '') for c in item.get('cast', [])]
 
     li_item = xbmcgui.ListItem(label=item.get('title', ''))
-    li_item.setInfo('video', {
+    set_video_info(li_item, {
         'Title': item.get('title', ''),
         'OriginalTitle': item.get('originaltitle', ''),
         'Year': item.get('year', ''),
@@ -171,7 +321,7 @@ def parse_movies(li, item):
 
 def parse_tvshows(li, item):
     li_item = xbmcgui.ListItem(label=item.get('title', ''))
-    li_item.setInfo('video', {
+    set_video_info(li_item, {
         'Title': item.get('title', ''),
         'Year': item.get('year', ''),
         'Genre': ', '.join(item.get('genre', [])),
@@ -190,7 +340,7 @@ def parse_seasons(li, item):
     label = item.get('label') or item.get('title') or 'Season %s' % item.get('season', '')
 
     li_item = xbmcgui.ListItem(label=label)
-    li_item.setInfo('video', {
+    set_video_info(li_item, {
         'Title': label,
         'Season': item.get('season', 0),
         'Episode': item.get('episode', 0),
@@ -210,7 +360,7 @@ def parse_episodes(li, item):
     showtitle = item.get('showtitle', '')
 
     li_item = xbmcgui.ListItem(label=title)
-    li_item.setInfo('video', {
+    set_video_info(li_item, {
         'Title': title,
         'TVShowTitle': showtitle,
         'Season': item.get('season', 0),
@@ -268,7 +418,7 @@ def parse_broadcast(li, item):
 
     li_item = xbmcgui.ListItem(label=title)
 
-    li_item.setInfo('video', {
+    set_video_info(li_item, {
         'Title': title,
         'Plot': item.get('plot', ''),
         'Genre': item.get('genre', ''),
@@ -357,7 +507,7 @@ def parse_timer(li, item):
     title = item.get('title') or item.get('label') or ''
 
     li_item = xbmcgui.ListItem(label=title)
-    li_item.setInfo('video', {
+    set_video_info(li_item, {
         'Title': title,
         'Plot': item.get('plot', ''),
     })
@@ -373,7 +523,7 @@ def parse_cast(li, item):
     name = item.get('name', '')
     li_item = xbmcgui.ListItem(label=name)
 
-    li_item.setInfo('video', {
+    set_video_info(li_item, {
         'Title': name,
     })
 

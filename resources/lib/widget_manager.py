@@ -531,7 +531,7 @@ class WidgetManager:
                 },
                 {
                     'header': ADDON.getLocalizedString(30230),
-                    'headeraction': 'ActivateWindow(favourites)',
+                    'headeraction': 'ActivateWindow(favouritesbrowser)',
                     'description': ADDON.getLocalizedString(30231),
                     'path': 'favourites://',
                     'setlimit': True,
