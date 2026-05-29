@@ -146,7 +146,7 @@
                     <height>34</height>
                     <font>regular30</font>
                     <textcolor>white</textcolor>
-                    <label>[COLOR active]Dĺžka[/COLOR]  $INFO[Window.Property(runtime)] min</label>
+                    <label>[COLOR active]$LOCALIZE[2050][/COLOR]  $INFO[Window.Property(runtime)] min</label>
                     <aligny>center</aligny>
                 </control>
 
@@ -197,13 +197,13 @@
                         <height>34</height>
                         <font>regular30</font>
                         <textcolor>white</textcolor>
-                        <label>[COLOR active]Dátum[/COLOR]  $INFO[Window.Property(datelong)]</label>
+                        <label>[COLOR active]$LOCALIZE[552][/COLOR]  $INFO[Window.Property(datelong)]</label>
                     </control>
                     <control type="label">
                         <height>34</height>
                         <font>regular30</font>
                         <textcolor>white</textcolor>
-                        <label>[COLOR active]Čas[/COLOR]  $INFO[Window.Property(starttime)] - $INFO[Window.Property(endtime)]</label>
+                        <label>[COLOR active]$LOCALIZE[555][/COLOR]  $INFO[Window.Property(starttime)] - $INFO[Window.Property(endtime)]</label>
                     </control>
                 </control>
 
@@ -221,21 +221,21 @@
                         <height>34</height>
                         <font>regular30</font>
                         <textcolor>white</textcolor>
-                        <label>[COLOR active]Žáner[/COLOR]  $INFO[Window.Property(genre)]</label>
+                        <label>[COLOR active]$LOCALIZE[515][/COLOR]  $INFO[Window.Property(genre)]</label>
                     </control>
                     <control type="label">
                         <visible>!String.IsEmpty(Window.Property(year)) + !String.IsEqual(Window.Property(year),0)</visible>
                         <height>34</height>
                         <font>regular30</font>
                         <textcolor>white</textcolor>
-                        <label>[COLOR active]Rok[/COLOR]  $INFO[Window.Property(year)]</label>
+                        <label>[COLOR active]$LOCALIZE[562][/COLOR]  $INFO[Window.Property(year)]</label>
                     </control>
                     <control type="label">
                         <visible>!String.IsEmpty(Window.Property(director))</visible>
                         <height>34</height>
                         <font>regular30</font>
                         <textcolor>white</textcolor>
-                        <label>[COLOR active]Réžia[/COLOR]  $INFO[Window.Property(director)]</label>
+                        <label>[COLOR active]$LOCALIZE[20339][/COLOR]  $INFO[Window.Property(director)]</label>
                     </control>
                 </control>
 
@@ -276,7 +276,7 @@
             </control>
 
             <!-- TEST: progress bar under bottom separator -->
-			<control type="progress" id="601">
+			<!-- <control type="progress" id="601">
 				<visible>String.IsEqual(Window.Property(showprogress),true)</visible>
 				<left>30</left>
 				<top>810</top>
@@ -284,7 +284,6 @@
 				<height>12</height>
 				<texturebg border="3">progress/texturebg_border_white.png</texturebg>
 				<midtexture colordiffuse="active" border="5,3,5,3">progress/texturebg_white.png</midtexture>
-				<!-- ŽIADNY <info> ANI <percent> TAG TU NEBUDE -->
 			</control>
 
 			<control type="label">
@@ -296,7 +295,7 @@
 				<font>regular24</font>
 				<textcolor>white</textcolor>
 				<label>Progress: $INFO[Window.Property(progresspercentage)]%</label>
-			</control>
+			</control> -->
 
             <!-- close button - original round style -->
             <control type="grouplist" id="101">
