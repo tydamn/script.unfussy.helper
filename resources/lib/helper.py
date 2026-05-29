@@ -3,7 +3,7 @@ import xbmcaddon
 import xbmcgui
 import json
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 
 ########################
 
@@ -140,7 +140,6 @@ def _safe_tag_call(tag, method, *args):
 def set_video_info(li_item, info):
     """
     Kodi 20+ nahrada za ListItem.setInfo('video', ...).
-    Ak by bezal starsi Kodi bez getVideoInfoTag(), pouzije sa stary fallback.
     """
     try:
         tag = li_item.getVideoInfoTag()
@@ -148,91 +147,59 @@ def set_video_info(li_item, info):
         li_item.setInfo('video', info)
         return
 
-    title = info.get('Title', '')
-    if title:
-        _safe_tag_call(tag, 'setTitle', str(title))
-
-    originaltitle = info.get('OriginalTitle', '')
-    if originaltitle:
-        _safe_tag_call(tag, 'setOriginalTitle', str(originaltitle))
-
-    tvshowtitle = info.get('TVShowTitle', '')
-    if tvshowtitle:
-        _safe_tag_call(tag, 'setTvShowTitle', str(tvshowtitle))
-
-    year = info.get('Year', '')
-    if year not in [None, '']:
-        _safe_tag_call(tag, 'setYear', _to_int(year))
-
-    genres = _to_list(info.get('Genre', ''))
-    if genres:
-        _safe_tag_call(tag, 'setGenres', genres)
-
-    studios = _to_list(info.get('Studio', ''))
-    if studios:
-        _safe_tag_call(tag, 'setStudios', studios)
-
-    countries = _to_list(info.get('Country', ''))
-    if countries:
-        _safe_tag_call(tag, 'setCountries', countries)
-
-    plot = info.get('Plot', '')
-    if plot:
-        _safe_tag_call(tag, 'setPlot', str(plot))
-
-    plotoutline = info.get('PlotOutline', '')
-    if plotoutline:
-        _safe_tag_call(tag, 'setPlotOutline', str(plotoutline))
-
-    mpaa = info.get('MPAA', '')
-    if mpaa:
-        _safe_tag_call(tag, 'setMpaa', str(mpaa))
-
-    playcount = info.get('Playcount', None)
-    if playcount is not None:
-        _safe_tag_call(tag, 'setPlaycount', _to_int(playcount))
-
-    season = info.get('Season', None)
-    if season is not None:
-        _safe_tag_call(tag, 'setSeason', _to_int(season))
-
-    episode = info.get('Episode', None)
-    if episode is not None:
-        _safe_tag_call(tag, 'setEpisode', _to_int(episode))
-
-    duration = info.get('Duration', None)
-    if duration is not None:
-        _safe_tag_call(tag, 'setDuration', _to_int(duration))
-
-    trailer = info.get('Trailer', '')
-    if trailer:
-        _safe_tag_call(tag, 'setTrailer', str(trailer))
-
-    lastplayed = info.get('LastPlayed', '')
-    if lastplayed:
-        _safe_tag_call(tag, 'setLastPlayed', str(lastplayed))
+    # Textové a číselné hodnoty
+    for key, method in [
+        ('Title', 'setTitle'),
+        ('OriginalTitle', 'setOriginalTitle'),
+        ('TVShowTitle', 'setTvShowTitle'),
+        ('Plot', 'setPlot'),
+        ('PlotOutline', 'setPlotOutline'),
+        ('MPAA', 'setMpaa'),
+        ('Trailer', 'setTrailer'),
+        ('LastPlayed', 'setLastPlayed'),
+        ('Premiered', 'setPremiered'),  # Kodi 20+ nemá setFirstAired, všetko ide cez setPremiered
+        ('DateAdded', 'setDateAdded'),
+        ('IMDBNumber', 'setIMDBNumber')
+    ]:
+        val = info.get(key, '')
+        if val:
+            _safe_tag_call(tag, method, str(val))
 
     premiered = info.get('Premiered', '')
     if premiered:
-        _safe_tag_call(tag, 'setPremiered', str(premiered))
         _safe_tag_call(tag, 'setFirstAired', str(premiered))
 
-    dateadded = info.get('DateAdded', '')
-    if dateadded:
-        _safe_tag_call(tag, 'setDateAdded', str(dateadded))
+    # Int hodnoty
+    for key, method in [
+        ('Year', 'setYear'),
+        ('Playcount', 'setPlaycount'),
+        ('Season', 'setSeason'),
+        ('Episode', 'setEpisode'),
+        ('Duration', 'setDuration')
+    ]:
+        val = info.get(key)
+        if val not in [None, '']:
+            _safe_tag_call(tag, method, _to_int(val))
 
-    imdbnumber = info.get('IMDBNumber', '')
-    if imdbnumber:
-        _safe_tag_call(tag, 'setIMDBNumber', str(imdbnumber))
+    # List hodnoty
+    for key, method in [
+        ('Genre', 'setGenres'),
+        ('Studio', 'setStudios'),
+        ('Country', 'setCountries')
+    ]:
+        val = _to_list(info.get(key, ''))
+        if val:
+            _safe_tag_call(tag, method, val)
 
-    rating = info.get('Rating', '')
-    votes = _to_int(info.get('Votes', 0))
+    # Hodnotenie (Rating)
+    rating = info.get('Rating')
     if rating not in [None, '']:
+        votes = _to_int(info.get('Votes', 0))
         _safe_tag_call(tag, 'setRating', _to_float(rating), votes, '', True)
 
+    # Herecké obsadenie (Cast)
     cast = info.get('Cast', [])
-    if cast:
-        # Kodi 20+ ocakava zoznam actor objektov; ak sa nepodari, preskocime len cast.
+    if cast and hasattr(xbmc, 'Actor'):
         actors = []
         for idx, actor in enumerate(cast):
             try:
@@ -244,7 +211,7 @@ def set_video_info(li_item, info):
                     name = str(actor)
                     role = ''
                     thumb = ''
-                if name and hasattr(xbmc, 'Actor'):
+                if name:
                     actors.append(xbmc.Actor(name, role, idx, thumb))
             except Exception:
                 pass
@@ -276,7 +243,9 @@ channel_properties = [
 # Parser dispatcher
 ########################
 
-def append_items(li, json_query, type):
+def append_items(li, json_query, type=None):
+    item_type = type
+
     parsers = {
         'movies': parse_movies,
         'tvshows': parse_tvshows,
@@ -288,10 +257,11 @@ def append_items(li, json_query, type):
         'cast': parse_cast,
     }
 
-    if type in parsers:
+    parser = parsers.get(item_type)
+    if parser:
         for item in json_query:
             if item:
-                parsers[type](li, item)
+                parser(li, item)
 
 ########################
 # Parsers
@@ -299,7 +269,6 @@ def append_items(li, json_query, type):
 
 def parse_movies(li, item):
     cast = [c.get('name', '') for c in item.get('cast', [])]
-
     li_item = xbmcgui.ListItem(label=item.get('title', ''))
     set_video_info(li_item, {
         'Title': item.get('title', ''),
@@ -338,7 +307,6 @@ def parse_tvshows(li, item):
 
 def parse_seasons(li, item):
     label = item.get('label') or item.get('title') or 'Season %s' % item.get('season', '')
-
     li_item = xbmcgui.ListItem(label=label)
     set_video_info(li_item, {
         'Title': label,
@@ -348,21 +316,15 @@ def parse_seasons(li, item):
         'Playcount': item.get('playcount', 0),
     })
     li_item.setArt(item.get('art', {}))
-
-    tvshowid = item.get('tvshowid', '')
-    season = item.get('season', '')
-    path = 'videodb://tvshows/titles/%s/%s/' % (tvshowid, season)
-
+    path = 'videodb://tvshows/titles/%s/%s/' % (item.get('tvshowid', ''), item.get('season', ''))
     li.append((path, li_item, True))
 
 def parse_episodes(li, item):
     title = item.get('title') or item.get('label') or ''
-    showtitle = item.get('showtitle', '')
-
     li_item = xbmcgui.ListItem(label=title)
     set_video_info(li_item, {
         'Title': title,
-        'TVShowTitle': showtitle,
+        'TVShowTitle': item.get('showtitle', ''),
         'Season': item.get('season', 0),
         'Episode': item.get('episode', 0),
         'Plot': item.get('plot', ''),
@@ -377,11 +339,7 @@ def parse_episodes(li, item):
 
     art = item.get('art', {})
     if not art:
-        art = {
-            'thumb': item.get('thumbnail', ''),
-            'fanart': item.get('fanart', ''),
-        }
-
+        art = {'thumb': item.get('thumbnail', ''), 'fanart': item.get('fanart', '')}
     li_item.setArt(art)
 
     resume = item.get('resume', {})
@@ -392,30 +350,18 @@ def parse_episodes(li, item):
             li_item.setProperty('ResumeTime', str(position))
             li_item.setProperty('TotalTime', str(total))
 
-    path = item.get('file', '')
-    li.append((path, li_item, False))
+    li.append((item.get('file', ''), li_item, False))
 
 def _first_non_empty(*values):
     for value in values:
-        if value is None:
-            continue
-        value = str(value).strip()
-        if value:
-            return value
-    return ''
-
-def _get_art_value(art, *keys):
-    if not isinstance(art, dict):
-        return ''
-    for key in keys:
-        value = art.get(key, '')
-        if value:
-            return str(value).strip()
+        if value not in [None, '']:
+            v_str = str(value).strip()
+            if v_str:
+                return v_str
     return ''
 
 def parse_broadcast(li, item):
     title = item.get('title', '')
-
     li_item = xbmcgui.ListItem(label=title)
 
     set_video_info(li_item, {
@@ -426,112 +372,82 @@ def parse_broadcast(li, item):
         'Duration': item.get('runtime', 0),
     })
 
-    item_art = item.get('art', {})
-    if not isinstance(item_art, dict):
-        item_art = {}
+    item_art = item.get('art') if isinstance(item.get('art'), dict) else {}
 
-    # Skusame viac moznych zdrojov obrazkov.
-    # Niektori PVR provideri posielaju iba "thumbnail",
-    # ini mozu mat obrazky ulozene v "art" ako poster/thumb/fanart/icon.
+    # Optimaliazia vytahovania artov (menej prechodov cez funkcie)
     epg_image = _first_non_empty(
-        item.get('thumbnail', ''),
-        item.get('epgeventicon', ''),
-        item.get('icon', ''),
-        _get_art_value(item_art, 'thumb', 'thumbnail', 'poster', 'landscape', 'fanart', 'icon')
+        item.get('thumbnail'),
+        item.get('epgeventicon'),
+        item.get('icon'),
+        item_art.get('thumb'),
+        item_art.get('thumbnail'),
+        item_art.get('poster'),
+        item_art.get('landscape'),
+        item_art.get('fanart'),
+        item_art.get('icon')
     )
 
-    poster_image = _first_non_empty(
-        _get_art_value(item_art, 'poster'),
-        epg_image
-    )
-
-    thumb_image = _first_non_empty(
-        _get_art_value(item_art, 'thumb', 'thumbnail'),
-        epg_image
-    )
-
-    fanart_image = _first_non_empty(
-        _get_art_value(item_art, 'fanart', 'landscape'),
-        epg_image
-    )
+    poster_image = _first_non_empty(item_art.get('poster'), epg_image)
+    thumb_image = _first_non_empty(item_art.get('thumb'), item_art.get('thumbnail'), epg_image)
+    fanart_image = _first_non_empty(item_art.get('fanart'), item_art.get('landscape'), epg_image)
 
     channel_icon = _first_non_empty(
-        item.get('channelicon', ''),
-        item.get('channel_icon', ''),
-        item.get('channelthumbnail', ''),
-        _get_art_value(item_art, 'icon')
+        item.get('channelicon'),
+        item.get('channel_icon'),
+        item.get('channelthumbnail'),
+        item_art.get('icon')
     )
 
-    li_item.setProperty('broadcastid', str(item.get('broadcastid', item.get('id', ''))))
-    li_item.setProperty('channelid', str(item.get('channelid', item.get('channel_id', ''))))
-    li_item.setProperty('episodename', str(item.get('episodename', '')))
-    li_item.setProperty('runtime', str(item.get('runtime', '')))
-    li_item.setProperty('date', str(item.get('date', '')))
-    li_item.setProperty('starttime', str(item.get('starttime', '')))
-    li_item.setProperty('endtime', str(item.get('endtime', '')))
-    li_item.setProperty('channelname', str(item.get('channelname', '')))
+    # Zápis vlastností pre skin/XML okná
+    for prop, key in [
+        ('broadcastid', 'broadcastid' if 'broadcastid' in item else 'id'),
+        ('channelid', 'channelid' if 'channelid' in item else 'channel_id'),
+        ('episodename', 'episodename'),
+        ('runtime', 'runtime'),
+        ('date', 'date'),
+        ('starttime', 'starttime'),
+        ('endtime', 'endtime'),
+        ('channelname', 'channelname')
+    ]:
+        li_item.setProperty(prop, str(item.get(key, '')))
 
-    # Properties pre custom XML okno.
     li_item.setProperty('thumbnail', thumb_image)
     li_item.setProperty('epgeventicon', epg_image)
     li_item.setProperty('poster', poster_image)
     li_item.setProperty('fanart', fanart_image)
     li_item.setProperty('channelicon', channel_icon)
 
+    # Skladanie finálneho art slovníka pre Kodi
     art = dict(item_art)
-    if thumb_image:
-        art['thumb'] = thumb_image
-    if poster_image:
-        art['poster'] = poster_image
+    if thumb_image: art['thumb'] = thumb_image
+    if poster_image: art['poster'] = poster_image
     if fanart_image:
         art['fanart'] = fanart_image
         art['landscape'] = fanart_image
-    if epg_image:
-        art['icon'] = epg_image
-
-    # Ikonka kanala ma mat prednost pre ListItem.Icon.
-    if channel_icon:
-        art['icon'] = channel_icon
+    if epg_image: art['icon'] = epg_image
+    if channel_icon: art['icon'] = channel_icon
 
     li_item.setArt(art)
 
-    log(
-        'parse_broadcast art: title="%s", epgeventicon="%s", thumbnail="%s", poster="%s", fanart="%s", channelicon="%s"'
-        % (title, epg_image, thumb_image, poster_image, fanart_image, channel_icon),
-        xbmc.LOGDEBUG
-    )
-
+    log('parse_broadcast art: title="%s", epgeventicon="%s", channelicon="%s"' % (title, epg_image, channel_icon), xbmc.LOGDEBUG)
     li.append(('', li_item, False))
 
 def parse_timer(li, item):
     title = item.get('title') or item.get('label') or ''
-
     li_item = xbmcgui.ListItem(label=title)
-    set_video_info(li_item, {
-        'Title': title,
-        'Plot': item.get('plot', ''),
-    })
+    set_video_info(li_item, {'Title': title, 'Plot': item.get('plot', '')})
 
-    li_item.setArt({
-        'icon': item.get('channelicon', ''),
-        'thumb': item.get('channelicon', ''),
-    })
-
+    icon = item.get('channelicon', '')
+    li_item.setArt({'icon': icon, 'thumb': icon})
     li.append(('', li_item, False))
 
 def parse_cast(li, item):
     name = item.get('name', '')
     li_item = xbmcgui.ListItem(label=name)
+    set_video_info(li_item, {'Title': name})
 
-    set_video_info(li_item, {
-        'Title': name,
-    })
-
-    li_item.setArt({
-        'thumb': item.get('thumbnail', ''),
-        'icon': item.get('thumbnail', ''),
-    })
-
+    thumb = item.get('thumbnail', '')
+    li_item.setArt({'thumb': thumb, 'icon': thumb})
     li.append(('', li_item, False))
 
 ########################
