@@ -130,7 +130,7 @@ class WidgetManager:
                     'description': ADDON.getLocalizedString(30268),
                     'setlimit': False,
                     'path': 'plugin://script.service.gto?action=getcontent&ts=$INFO[Window(Home).Property(GTO.timestamp)]',
-                    'onclick': 'RunScript(script.service.gto,action=infopopup&blob=$INFO[ListItem.Property(BlobID)])',
+                    'onclick': 'RunScript(script.service.gto,action=infopopup&amp;blob=$INFO[ListItem.Property(BlobID)])',
                     'styles': [
                         {
                             'label': ADDON.getLocalizedString(30265),
@@ -147,7 +147,7 @@ class WidgetManager:
                     'description': ADDON.getLocalizedString(30225),
                     'setlimit': False,
                     'path': 'plugin://script.unfussy.helper/?info=getrunningat&reload=$INFO[Window(Home).Property(widgetreload-runningat)]',
-                    'onclick': 'RunScript(script.unfussy.helper,action=info_runningat&bc_id=$INFO[ListItem.Property(broadcastid)]&c_id=$INFO[ListItem.Property(channelid)])',
+                    'onclick': 'RunScript(script.unfussy.helper,action=info_runningat&amp;bc_id=$INFO[ListItem.Property(broadcastid)]&amp;c_id=$INFO[ListItem.Property(channelid)])',
                     'styles': [
                         {
                             'label': ADDON.getLocalizedString(30263),
@@ -163,7 +163,7 @@ class WidgetManager:
                     'headeraction': 'ActivateWindow(tvtimers)',
                     'description': ADDON.getLocalizedString(30227),
                     'path': 'plugin://script.unfussy.helper/?info=gettimers&reload=$INFO[Window(Home).Property(widgetreload-timers)]',
-                    'onclick': 'RunScript(script.unfussy.helper,action=info_timer&timer_id=$INFO[ListItem.Property(timerid)])',
+                    'onclick': 'RunScript(script.unfussy.helper,action=info_timer&amp;timer_id=$INFO[ListItem.Property(timerid)])',
                     'setlimit': True,
                     'sortby': 'date',
                     'sortorder': 'descending',

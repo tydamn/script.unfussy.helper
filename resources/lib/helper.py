@@ -3,7 +3,7 @@ import xbmcaddon
 import xbmcgui
 import json
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 
 ########################
 
@@ -98,8 +98,11 @@ def getTimeFromString(str_time, time_format=None, utc_offset=None):
     log('getTimeFromString: unsupported time format: %s' % str_time, xbmc.LOGWARNING)
     return None
 
+# Vráti rozdiel medzi lokálnym časom a UTC (napr. CEST = +2h, CET = +1h).
+# Jedno volanie — atomické, žiadny drift medzi dvoma volaniami.
 def getUtcOffset():
-    return datetime.now() - datetime.utcnow()
+    now = datetime.now(timezone.utc)
+    return now.astimezone().replace(tzinfo=None) - now.replace(tzinfo=None)
 
 def _to_int(value, default=0):
     try:
@@ -139,7 +142,7 @@ def _safe_tag_call(tag, method, *args):
 
 def set_video_info(li_item, info):
     """
-    Kodi 20+ nahrada za ListItem.setInfo('video', ...).
+    Kodi 20+ náhrada za ListItem.setInfo('video', ...).
     """
     try:
         tag = li_item.getVideoInfoTag()
@@ -147,7 +150,7 @@ def set_video_info(li_item, info):
         li_item.setInfo('video', info)
         return
 
-    # Textové a číselné hodnoty
+    # Textové hodnoty
     for key, method in [
         ('Title', 'setTitle'),
         ('OriginalTitle', 'setOriginalTitle'),
@@ -157,7 +160,7 @@ def set_video_info(li_item, info):
         ('MPAA', 'setMpaa'),
         ('Trailer', 'setTrailer'),
         ('LastPlayed', 'setLastPlayed'),
-        ('Premiered', 'setPremiered'),  # Kodi 20+ nemá setFirstAired, všetko ide cez setPremiered
+        ('Premiered', 'setPremiered'),
         ('DateAdded', 'setDateAdded'),
         ('IMDBNumber', 'setIMDBNumber')
     ]:
@@ -165,9 +168,8 @@ def set_video_info(li_item, info):
         if val:
             _safe_tag_call(tag, method, str(val))
 
-    premiered = info.get('Premiered', '')
-    if premiered:
-        _safe_tag_call(tag, 'setFirstAired', str(premiered))
+    # FIX: Odstránený duplicitný blok setFirstAired — neexistuje v Kodi 20+
+    # a Premiered je už nastavený cez setPremiered vyššie.
 
     # Int hodnoty
     for key, method in [
@@ -239,13 +241,23 @@ channel_properties = [
     'isrecording'
 ]
 
+timer_properties = [
+    'title', 'starttime', 'endtime', 'runtime', 'channelid',
+    'summary', 'state', 'timertype', 'fulltextepgsearch',
+    'startmargin', 'endmargin', 'priority', 'lifetime', 'firstday',
+    'weekdays', 'epgsearchstring', 'directory', 'maxrecordings',
+    'preventduplicates', 'epguid', 'broadcastid', 'serieslink'
+]
+
 ########################
 # Parser dispatcher
 ########################
 
-def append_items(li, json_query, type=None):
-    item_type = type
-
+# FIX: 'type' premenovaný na 'item_type' aby neskrýval vstavaný built-in.
+# Pre spätnú kompatibilitu akceptujeme aj starý keyword argument 'type'.
+def append_items(li, json_query, item_type=None, **kwargs):
+    if item_type is None:
+        item_type = kwargs.get('type')
     parsers = {
         'movies': parse_movies,
         'tvshows': parse_tvshows,
@@ -268,7 +280,8 @@ def append_items(li, json_query, type=None):
 ########################
 
 def parse_movies(li, item):
-    cast = [c.get('name', '') for c in item.get('cast', [])]
+    # FIX: posielame celý dict herca (nie len meno) aby set_video_info
+    # mohlo nastaviť aj rolu a thumbnail
     li_item = xbmcgui.ListItem(label=item.get('title', ''))
     set_video_info(li_item, {
         'Title': item.get('title', ''),
@@ -282,7 +295,7 @@ def parse_movies(li, item):
         'Votes': item.get('votes', ''),
         'MPAA': item.get('mpaa', ''),
         'Playcount': item.get('playcount', 0),
-        'Cast': cast,
+        'Cast': item.get('cast', []),
         'Trailer': item.get('trailer', ''),
     })
     li_item.setArt(item.get('art', {}))
@@ -374,7 +387,6 @@ def parse_broadcast(li, item):
 
     item_art = item.get('art') if isinstance(item.get('art'), dict) else {}
 
-    # Optimaliazia vytahovania artov (menej prechodov cez funkcie)
     epg_image = _first_non_empty(
         item.get('thumbnail'),
         item.get('epgeventicon'),
@@ -398,10 +410,11 @@ def parse_broadcast(li, item):
         item_art.get('icon')
     )
 
-    # Zápis vlastností pre skin/XML okná
+    # FIX: prehľadnejší fallback pre broadcastid a channelid
+    li_item.setProperty('broadcastid', str(item.get('broadcastid') or item.get('id', '')))
+    li_item.setProperty('channelid', str(item.get('channelid') or item.get('channel_id', '')))
+
     for prop, key in [
-        ('broadcastid', 'broadcastid' if 'broadcastid' in item else 'id'),
-        ('channelid', 'channelid' if 'channelid' in item else 'channel_id'),
         ('episodename', 'episodename'),
         ('runtime', 'runtime'),
         ('date', 'date'),
@@ -417,15 +430,15 @@ def parse_broadcast(li, item):
     li_item.setProperty('fanart', fanart_image)
     li_item.setProperty('channelicon', channel_icon)
 
-    # Skladanie finálneho art slovníka pre Kodi
+    # FIX: icon má jasnú prioritu — channel_icon ak existuje, inak epg_image
+    # (predtým sa epg_image nastavil a hneď prepísal channel_iconom)
     art = dict(item_art)
-    if thumb_image: art['thumb'] = thumb_image
-    if poster_image: art['poster'] = poster_image
+    if thumb_image:   art['thumb'] = thumb_image
+    if poster_image:  art['poster'] = poster_image
     if fanart_image:
         art['fanart'] = fanart_image
         art['landscape'] = fanart_image
-    if epg_image: art['icon'] = epg_image
-    if channel_icon: art['icon'] = channel_icon
+    art['icon'] = channel_icon or epg_image
 
     li_item.setArt(art)
 

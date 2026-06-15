@@ -14,14 +14,51 @@
             <width>1720</width>
             <height>880</height>
 
-            <control type="image">
-                <width>1720</width>
-                <height>880</height>
-                <aspectratio>stretch</aspectratio>
-                <texture colordiffuse="black">colors/white.png</texture>
-                <bordertexture colordiffuse="border">colors/white.png</bordertexture>
-                <bordersize>1</bordersize>
-            </control>
+        <!-- Transparent black background -->
+        <control type="image">
+            <left>0</left>
+            <top>0</top>
+            <width>1720</width>
+            <height>880</height>
+            <aspectratio>stretch</aspectratio>
+            <texture colordiffuse="E6000000">colors/white.png</texture>
+        </control>
+
+        <!-- Top border -->
+        <control type="image">
+            <left>0</left>
+            <top>0</top>
+            <width>1720</width>
+            <height>1</height>
+            <texture colordiffuse="border">colors/white.png</texture>
+        </control>
+
+        <!-- Bottom border -->
+        <control type="image">
+            <left>0</left>
+            <top>879</top>
+            <width>1720</width>
+            <height>1</height>
+            <texture colordiffuse="border">colors/white.png</texture>
+        </control>
+
+        <!-- Left border -->
+        <control type="image">
+            <left>0</left>
+            <top>0</top>
+            <width>1</width>
+            <height>880</height>
+            <texture colordiffuse="border">colors/white.png</texture>
+        </control>
+
+        <!-- Right border -->
+        <control type="image">
+            <left>1719</left>
+            <top>0</top>
+            <width>1</width>
+            <height>880</height>
+            <texture colordiffuse="border">colors/white.png</texture>
+        </control>
 
             <!-- poster / EPG image - no background frame -->
             <control type="group">
@@ -146,7 +183,7 @@
                     <height>34</height>
                     <font>regular30</font>
                     <textcolor>white</textcolor>
-                    <label>[COLOR active]$LOCALIZE[2050][/COLOR]  $INFO[Window.Property(runtime)] min</label>
+                    <label>[COLOR active]$LOCALIZE[180]:[/COLOR]  $INFO[Window.Property(runtime)] min</label>
                     <aligny>center</aligny>
                 </control>
 
@@ -197,13 +234,13 @@
                         <height>34</height>
                         <font>regular30</font>
                         <textcolor>white</textcolor>
-                        <label>[COLOR active]$LOCALIZE[552][/COLOR]  $INFO[Window.Property(datelong)]</label>
+                        <label>[COLOR active]$LOCALIZE[552]:[/COLOR]  $INFO[Window.Property(datelong)]</label>
                     </control>
                     <control type="label">
                         <height>34</height>
                         <font>regular30</font>
                         <textcolor>white</textcolor>
-                        <label>[COLOR active]$LOCALIZE[555][/COLOR]  $INFO[Window.Property(starttime)] - $INFO[Window.Property(endtime)]</label>
+                        <label>[COLOR active]$LOCALIZE[555]:[/COLOR]  $INFO[Window.Property(starttime)] - $INFO[Window.Property(endtime)]</label>
                     </control>
                 </control>
 
@@ -221,21 +258,21 @@
                         <height>34</height>
                         <font>regular30</font>
                         <textcolor>white</textcolor>
-                        <label>[COLOR active]$LOCALIZE[515][/COLOR]  $INFO[Window.Property(genre)]</label>
+                        <label>[COLOR active]$LOCALIZE[515]:[/COLOR]  $INFO[Window.Property(genre)]</label>
                     </control>
                     <control type="label">
                         <visible>!String.IsEmpty(Window.Property(year)) + !String.IsEqual(Window.Property(year),0)</visible>
                         <height>34</height>
                         <font>regular30</font>
                         <textcolor>white</textcolor>
-                        <label>[COLOR active]$LOCALIZE[562][/COLOR]  $INFO[Window.Property(year)]</label>
+                        <label>[COLOR active]$LOCALIZE[562]:[/COLOR]  $INFO[Window.Property(year)]</label>
                     </control>
                     <control type="label">
                         <visible>!String.IsEmpty(Window.Property(director))</visible>
                         <height>34</height>
                         <font>regular30</font>
                         <textcolor>white</textcolor>
-                        <label>[COLOR active]$LOCALIZE[20339][/COLOR]  $INFO[Window.Property(director)]</label>
+                        <label>[COLOR active]$LOCALIZE[20339]:[/COLOR]  $INFO[Window.Property(director)]</label>
                     </control>
                 </control>
 
@@ -275,18 +312,66 @@
                 <texture colordiffuse="border">colors/white.png</texture>
             </control>
 
-            <!-- TEST: progress bar under bottom separator -->
-			<!-- <control type="progress" id="601">
+
+
+            <!-- upcoming broadcasts under bottom separator -->
+            <control type="group">
+                <visible>!String.IsEmpty(Window.Property(upcomingtext))</visible>
+                <left>30</left>
+                <top>812</top>
+                <width>1490</width>
+                <height>52</height>
+
+                <control type="image">
+                    <left>0</left>
+                    <top>0</top>
+                    <width>1490</width>
+                    <height>52</height>
+                    <aspectratio>stretch</aspectratio>
+                    <texture colordiffuse="22000000">colors/white.png</texture>
+                </control>
+
+                <control type="label">
+                    <left>18</left>
+                    <top>0</top>
+                    <width>170</width>
+                    <height>52</height>
+                    <font>regular24</font>
+                    <aligny>center</aligny>
+                    <textcolor>active</textcolor>
+                    <shadowcolor>black</shadowcolor>
+                    <label>Nasleduje:</label>
+                </control>
+
+                <!-- One long scrolling line, so more EPG items are close together and actually scroll -->
+                <control type="label">
+                    <left>185</left>
+                    <top>0</top>
+                    <width>1285</width>
+                    <height>52</height>
+                    <font>regular24</font>
+                    <aligny>center</aligny>
+                    <textcolor>white</textcolor>
+                    <shadowcolor>black</shadowcolor>
+                    <label>$INFO[Window.Property(upcomingtext)]</label>
+                    <scroll>true</scroll>
+                    <scrollspeed>25</scrollspeed>
+                    <scrollsuffix>       ••••••       </scrollsuffix>
+                </control>
+            </control>
+
+            <!-- TEST: progress bar under bottom separator
+			<control type="progress" id="601">
 				<visible>String.IsEqual(Window.Property(showprogress),true)</visible>
 				<left>30</left>
 				<top>810</top>
 				<width>420</width>
 				<height>12</height>
-				<texturebg border="3">progress/texturebg_border_white.png</texturebg>
+				<texturebg colordiffuse="55FFFFFF" border="3">progress/texturebg_border_white.png</texturebg>
 				<midtexture colordiffuse="active" border="5,3,5,3">progress/texturebg_white.png</midtexture>
 			</control>
 
-			<control type="label">
+ 			<control type="label">
 				<visible>String.IsEqual(Window.Property(showprogress),true)</visible>
 				<left>30</left>
 				<top>825</top>

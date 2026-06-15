@@ -480,7 +480,7 @@ class AddonSelector:
 
     def showSelector(self, addons):
         addons_list = self.loadAddons()
-        if len(addons_list) == 0: return
+        if len(addons_list) == 0: return []
         addons_listitems = self.getListitems(addons_list)
         addons_selected = self.getAddonIndexes(addons_list, addons)
         dialog = xbmcgui.Dialog()
@@ -605,10 +605,7 @@ class PlaylistSelector:
     def hide( self, cat, type ):
         if not self.label_playlist.isVisible():
             return False
-        for pw in self.playlist_widgets:
-            if not (pw['cat'] == cat and pw['type'] == type):
-                return True
-        return False
+        return not any(pw['cat'] == cat and pw['type'] == type for pw in self.playlist_widgets)
 
     def setDetail(self, playlist):
         if playlist == '':
@@ -636,7 +633,7 @@ class PlaylistSelector:
         return playlists[playlist_new]['name'] + '.' + playlists[playlist_new]['type']
 
     def loadPlaylist(self, playlist_type, playlist_subtype):
-        path_playlists = xbmc.translatePath(  'special://masterprofile/playlists/' + playlist_type ).decode("utf-8")
+        path_playlists = xbmc.translatePath('special://masterprofile/playlists/' + playlist_type)
         log('path_playlists %s' % path_playlists)
         dirs, files = xbmcvfs.listdir(path_playlists)
         playlists = []
@@ -715,9 +712,12 @@ class AddonPathSelector:
         return False
 
     def setDetail(self, path):
+        # FIX: chýbal else — pri prázdnej path sa nastavil label ale potom
+        # kód pokračoval a skúsil path['name'] na '' → crash
         if not path:
             self.label_path_selected.setLabel(ADDON.getLocalizedString(30116))
-        self.label_path_selected.setLabel(path['name'])
+        else:
+            self.label_path_selected.setLabel(path['name'])
 
     def showSelector(self, path_selected):
         apm = AddonPathManager()

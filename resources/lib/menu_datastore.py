@@ -2,18 +2,33 @@
 # coding: utf-8
 import os, json
 import xml.etree.ElementTree as xml
-import xbmc, xbmcgui, xbmcvfs
+import xbmc, xbmcgui
 from resources.lib.helper import *
 from resources.lib.menu_actionmanager import MenuActionManager
 
 #######################################################################################
 
 ADDON               = xbmcaddon.Addon()
-ADDONID             = ADDON.getAddonInfo('id').decode( 'utf-8' )
-CWD                 = ADDON.getAddonInfo('path').decode('utf-8')
-DEFAULTPATH         = xbmc.translatePath( os.path.join(CWD, 'resources','menu_default.json') ).decode("utf-8")
-CONFIGPATH          = os.path.join( xbmc.translatePath( "special://profile/" ).decode( 'utf-8' ), "addon_data", ADDONID, 'menu.json').decode("utf-8")
-SKININCLUDEPATH     = xbmc.translatePath( os.path.join('special://skin', 'xml','Includes_Home_Menucontent.xml') ).decode("utf-8")
+ADDONID             = ADDON.getAddonInfo('id')  # Není třeba dekódovat
+CWD                 = ADDON.getAddonInfo('path')
+import xbmcvfs
+
+DEFAULTPATH         = xbmcvfs.translatePath(os.path.join(CWD, 'resources', 'menu_default.json'))
+CONFIGPATH = os.path.join(xbmcvfs.translatePath("special://profile/"), "addon_data", ADDONID, 'menu.json')
+SKININCLUDEPATH = xbmcvfs.translatePath(os.path.join('special://skin', 'xml', 'Includes_Home_Menucontent.xml'))
+
+
+def indent(elem, level=0):
+    i = "\n" + level * "  "
+    if len(elem):
+        if not elem.text or not elem.text.strip():
+            elem.text = i + "  "
+        for child in elem:
+            indent(child, level + 1)
+        if not child.tail or not child.tail.strip():
+            child.tail = i
+    if level and (not elem.tail or not elem.tail.strip()):
+        elem.tail = i
 
 #######################################################################################
 
@@ -64,8 +79,9 @@ class MenuDataStore:
         base_path = os.path.dirname(CONFIGPATH)
         if not os.path.exists(base_path):
             os.makedirs(base_path)
-        menu_json_file = open(CONFIGPATH, 'w+')
-        json.dump(self.menu, menu_json_file)
+        # FIX: použitý with — zaručí flush a zatvorenie súboru aj pri výnimke
+        with open(CONFIGPATH, 'w+') as menu_json_file:
+            json.dump(self.menu, menu_json_file)
 
     def checkXMLIncludes(self):
         if xbmcvfs.exists(SKININCLUDEPATH):
@@ -231,7 +247,7 @@ class MenuXMLWriter:
     def menuItem(self, parent, label, thumb, thumbsize, actiontype, action, sub_id):
         xml_item = xml.SubElement(parent, 'item')
         xml_label = xml.SubElement(xml_item, 'label')
-        xml_label.text = encode4XML(label)
+        xml_label.text = '' if label is None else str(label)
         xml_thumb = xml.SubElement(xml_item, 'thumb')
         xml_thumb.text = thumb
         if actiontype > 3:

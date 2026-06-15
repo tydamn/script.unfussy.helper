@@ -5,8 +5,11 @@ from resources.lib.helper import *
 #######################################################################################
 
 ADDON               = xbmcaddon.Addon()
-ADDONID             = ADDON.getAddonInfo('id').decode( 'utf-8' )
-CONFIGPATH          = os.path.join( xbmc.translatePath( "special://profile/" ).decode( 'utf-8' ), "addon_data", ADDONID, 'widget_addon_pathes.json').decode("utf-8")
+ADDONID             = ADDON.getAddonInfo('id')
+import xbmcvfs
+
+CONFIGPATH = os.path.join(xbmcvfs.translatePath("special://profile/"), "addon_data", ADDONID, "widget_addon_pathes.json")
+
 
 #######################################################################################
 
@@ -35,19 +38,22 @@ class AddonPathManager:
         base_path = os.path.dirname(CONFIGPATH)
         if not os.path.exists(base_path):
             os.makedirs(base_path)
-        fh_addon_pathes = open(CONFIGPATH, 'w+')
-        json.dump(addon_pathes, fh_addon_pathes)
+        # FIX: použitý with — súbor sa zaručene zatvorí aj pri výnimke
+        with open(CONFIGPATH, 'w+') as fh_addon_pathes:
+            json.dump(addon_pathes, fh_addon_pathes)
 
     def deletePaths(self, paths, paths_del):
         for index_del in sorted(paths_del, reverse=True):
             del paths[index_del]
-        fh_addon_pathes = open(CONFIGPATH, 'w+')
-        json.dump(paths, fh_addon_pathes)
+        # FIX: použitý with
+        with open(CONFIGPATH, 'w+') as fh_addon_pathes:
+            json.dump(paths, fh_addon_pathes)
 
     def readExisting(self):
         try:
-            fh_addon_pathes = open(CONFIGPATH, 'r')
-            addon_pathes = fh_addon_pathes.read()
+            # FIX: použitý with
+            with open(CONFIGPATH, 'r') as fh_addon_pathes:
+                addon_pathes = fh_addon_pathes.read()
         except Exception:
             addon_pathes = '[]'
         return json.loads(addon_pathes)

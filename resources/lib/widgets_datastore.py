@@ -117,9 +117,9 @@ class WidgetsDataStore:
         base_path = os.path.dirname(CONFIGPATH)
         if not os.path.exists(base_path):
             os.makedirs(base_path)
-
-        widgets_json_file = open(CONFIGPATH, 'w+')
-        json.dump(self.widgets, widgets_json_file)
+        # FIX: použitý with — zaručí flush a zatvorenie súboru aj pri výnimke
+        with open(CONFIGPATH, 'w+') as widgets_json_file:
+            json.dump(self.widgets, widgets_json_file)
 
     def checkXMLIncludes(self):
         if xbmcvfs.exists(SKININCLUDEPATH):
@@ -322,10 +322,10 @@ class WidgetXMLWriter:
         elif cat == 3 and (type == 3 or type == 4 or type == 5):
             onclick = 'ActivateWindow(Music,special://profile/playlists/music/%s,return)' % widget['playlist']
         elif cat == 5 and type == 1:
+            # FIX: RunAddon() ignoroval cestu a otváralo len koreň pluginu.
+            # ActivateWindow s celou addonpath cestou otvorí priamo správny priečinok.
             addonpath = widget['addonpath']['path']
-            first_slash = addonpath.find('/', 10)
-            plugin_id = addonpath[9:first_slash]
-            onclick = 'RunAddon(' + plugin_id + ')'
+            onclick = 'ActivateWindow(Videos,%s,return)' % addonpath
         else:
             onclick = self.wm.getHeaderAction(widget['category'], widget['type'])
 

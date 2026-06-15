@@ -1,5 +1,4 @@
 #!/usr/bin/python
-import time
 import re
 from datetime import datetime, timedelta
 import locale
@@ -11,8 +10,6 @@ broadcast_properties = [
     'starttime',
     'endtime',
     'runtime',
-    'progress',
-    'progresspercentage',
     'episodename',
     'episodenum',
     'genre',
@@ -29,29 +26,32 @@ broadcast_properties = [
 
 #######################################################################################
 
+# FIX: Hardcoded +2h nahradený getUtcOffset() z helper.py
+# Funguje správne aj v zime (CET = +1h) aj v lete (CEST = +2h).
 def safeParseAndCorrectTime(value):
     if not value:
         return None
 
     value = str(value).strip()
+    utc_offset = getUtcOffset()
 
     if value.isdigit():
         try:
-            return datetime.fromtimestamp(int(value)) + timedelta(hours=2)
+            return datetime.fromtimestamp(int(value)) + utc_offset
         except Exception:
             pass
 
     match = re.search(r'(\d{4})[-.](\d{2})[-.](\d{2})[ T](\d{2}):(\d{2})', value)
     if match:
         try:
-            year = int(match.group(1))
-            month = int(match.group(2))
-            day = int(match.group(3))
-            hour = int(match.group(4))
-            minute = int(match.group(5))
-
-            dt = datetime(year, month, day, hour, minute)
-            return dt + timedelta(hours=2)
+            dt = datetime(
+                int(match.group(1)),
+                int(match.group(2)),
+                int(match.group(3)),
+                int(match.group(4)),
+                int(match.group(5))
+            )
+            return dt + utc_offset
         except Exception:
             pass
 
@@ -93,12 +93,11 @@ def formatTimeDelta(delta):
 class PVRRunningAt:
 
     def __init__(self):
-        def_loc = ''
+        # FIX: locale.getdefaultlocale() je deprecated od Python 3.11
         try:
-            def_loc = locale.getdefaultlocale()[0]
-            locale.setlocale(locale.LC_ALL, def_loc)
+            locale.setlocale(locale.LC_ALL, '')
         except Exception:
-            log("ERROR setting locale: %s" % def_loc)
+            log("ERROR setting locale")
 
     def getBroadcastAt(self, starttime, channelid):
         broadcasts = self.getBroadcasts(channelid)
@@ -106,9 +105,9 @@ class PVRRunningAt:
             return None
 
         interval = self.getStartTimeInterval(starttime)
-        starttime_dt = interval[0]
-        start_interval = interval[1]
-        stop_interval = interval[2]
+        starttime_dt, start_interval, stop_interval = interval
+        if starttime_dt is None:
+            return None
 
         bc = 0
         fallback = -1
@@ -183,43 +182,7 @@ class PVRRunningAt:
         win.setProperty('runtime', str(broadcast.get('runtime', '')))
         win.setProperty('switchdate', broadcast.get('display_switchdate', ''))
 
-        # Progress bar test for custom info dialog.
-        # Kodi exposes progress/progresspercentage in PVR.GetBroadcastDetails,
-        # but the custom WindowXMLDialog needs it passed as Window properties.
-        progresspercentage = broadcast.get('progresspercentage', '')
-        if progresspercentage in [None, '']:
-            progresspercentage = broadcast.get('progress', '')
 
-        try:
-            progress_value = float(progresspercentage)
-            if progress_value < 0:
-                progress_value = 0
-            if progress_value > 100:
-                progress_value = 100
-            progresspercentage = str(int(round(progress_value)))
-        except Exception:
-            progresspercentage = '0'
-
-        isactive_value = 'true' if broadcast.get('isactive') is True else 'false'
-        showprogress_value = 'true' if isactive_value == 'true' else 'false'
-
-        win.setProperty('progress', str(broadcast.get('progress', '')))
-        win.setProperty('progresspercentage', progresspercentage)
-        win.setProperty('isactive', isactive_value)
-        win.setProperty('showprogress', showprogress_value)
-
-        # log(
-        #   'SHOWINFO PROGRESS DEBUG: raw_progress=%s raw_progresspercentage=%s final_progresspercentage=%s isactive=%s showprogress=%s'
-        #    % (
-        #        broadcast.get('progress', ''),
-        #        broadcast.get('progresspercentage', ''),
-        #        progresspercentage,
-        #        isactive_value,
-        #        showprogress_value
-        #   ),
-        #   xbmc.LOGINFO,
-        #   force=True
-        # )
 
 
         # Time info under poster:
@@ -244,27 +207,58 @@ class PVRRunningAt:
         win.setProperty('timingtime', timing_time)
         win.setProperty('timingtext', (timing_label + ' ' + timing_time).strip())
 
+        # Nasledujúce relácie pod spodným separatorom.
+        # Spoľahlivejšie berieme poradie z EPG podľa broadcastid, nie iba porovnanie času.
+        for i in range(1, 9):
+            win.setProperty('next%dstart' % i, '')
+            win.setProperty('next%dend' % i, '')
+            win.setProperty('next%dtime' % i, '')
+            win.setProperty('next%dtitle' % i, '')
+        win.setProperty('upcomingtext', '')
+
+        try:
+            upcoming = self.getUpcomingBroadcasts(
+                channel_id,
+                broadcast.get('broadcastid', ''),
+                start_dt,
+                end_dt,
+                limit=8
+            )
+
+            upcoming_parts = []
+
+            for idx, item in enumerate(upcoming, 1):
+                start_txt = item.get('display_starttime', '')
+                end_txt = item.get('display_endtime', '')
+                title_txt = item.get('title', '')
+                time_txt = start_txt
+
+                if start_txt and end_txt:
+                    time_txt = '%s - %s' % (start_txt, end_txt)
+
+                win.setProperty('next%dstart' % idx, start_txt)
+                win.setProperty('next%dend' % idx, end_txt)
+                win.setProperty('next%dtime' % idx, time_txt)
+                win.setProperty('next%dtitle' % idx, title_txt)
+
+                if title_txt:
+                    if start_txt:
+                        upcoming_parts.append('[COLOR active]%s[/COLOR]  %s' % (start_txt, title_txt))
+                    else:
+                        upcoming_parts.append(title_txt)
+
+            win.setProperty('upcomingtext', '   •   '.join(upcoming_parts))
+
+
+
+        except Exception as e:
+            log('ERROR: Nepodarilo sa nacitat nasledujuce relacie: %s' % e, xbmc.LOGERROR, force=True)
+
         channel = broadcast.get('channel') or {}
         win.setProperty('channelid', str(channel.get('channelid', '')))
         win.setProperty('channel', channel.get('channel', ''))
         win.setProperty('channelnumber', str(channel.get('channelnumber', '')))
         win.setProperty('channelicon', channel.get('icon', ''))
-
-        # --- TÚTO ČASŤ TU PRIDAJ/UPRAV ---
-        # Pred spustením okna musíme okno najprv "ukázať" (show),
-        # aby Kodi načítalo controls do pamäte, inak ich Python nenájde.
-        win.show()
-
-        # Počkáme malinký zlomok sekundy, kým Kodi control reálne vytvorí
-        time.sleep(0.05)
-
-        try:
-            # Vytiahneme si progress bar z XML pomocou jeho ID
-            progress_control = win.getControl(601)
-            # progresspercentage už máš v kóde vypočítané ako čisté číslo v stringu
-            progress_control.setPercent(int(progresspercentage))
-        except Exception as e:
-            log("ERROR: Nepodarilo sa naplniť progress bar z Pythonu: %s" % e, xbmc.LOGERROR)
 
         win.doModal()
         del win
@@ -280,24 +274,32 @@ class PVRRunningAt:
     #######################################################################################
 
     def getBroadcasts(self, channelid):
+        try:
+            channelid_int = int(channelid)
+        except Exception:
+            channelid_int = channelid
+
         query = json_call(
             'PVR.GetBroadcasts',
-            params={'channelid': channelid},
-            properties=['starttime', 'endtime']
+            params={'channelid': channelid_int},
+            properties=['title', 'plot', 'starttime', 'endtime', 'runtime', 'episodename', 'episodenum', 'genre', 'year', 'hastimer', 'isactive', 'wasactive']
         )
 
         try:
             broadcasts = query['result']['broadcasts']
-        except Exception:
-            log("ERROR getBroadcast")
+        except Exception as e:
+            log("ERROR getBroadcast: %s" % e, xbmc.LOGERROR, force=True)
+            log("ERROR getBroadcast raw query: %s" % query, xbmc.LOGINFO, force=True)
             return None
+
 
         return broadcasts
 
     def _parseKodiDateTime(self, value):
         return safeParseAndCorrectTime(value)
 
-    def _formatRawTime(self, value, add_hours=2):
+    # FIX: Odstránený nepoužívaný parameter add_hours=2 — offset riadi getUtcOffset()
+    def _formatRawTime(self, value):
         dt = safeParseAndCorrectTime(value)
         if dt:
             return dt.strftime('%H:%M')
@@ -307,7 +309,7 @@ class PVRRunningAt:
             return value[11:16]
         return value
 
-    def _formatRawDate(self, value, add_hours=2):
+    def _formatRawDate(self, value):
         dt = safeParseAndCorrectTime(value)
         if dt:
             return dt.strftime('%d.%m')
@@ -318,7 +320,7 @@ class PVRRunningAt:
         except Exception:
             return value[:10]
 
-    def _formatRawDateLong(self, value, add_hours=2):
+    def _formatRawDateLong(self, value):
         dt = safeParseAndCorrectTime(value)
         if dt:
             return self._formatKodiLocalizedDateLong(dt)
@@ -364,6 +366,75 @@ class PVRRunningAt:
 
         except Exception:
             return dt.strftime('%a %d.%b')
+
+    def getUpcomingBroadcasts(self, channel_id, current_broadcastid='', current_start_dt=None, current_end_dt=None, limit=8):
+        broadcasts = self.getBroadcasts(channel_id)
+        if not broadcasts:
+                return []
+
+        current_id = str(current_broadcastid or '')
+        parsed_items = []
+
+        for pos, item in enumerate(broadcasts):
+            start_dt = safeParseAndCorrectTime(item.get('starttime', ''))
+            end_dt = safeParseAndCorrectTime(item.get('endtime', ''))
+
+            item_copy = dict(item)
+            item_copy['_pos'] = pos
+            item_copy['_start_dt'] = start_dt
+            item_copy['_end_dt'] = end_dt
+
+            if start_dt:
+                item_copy['display_starttime'] = start_dt.strftime('%H:%M')
+            else:
+                item_copy['display_starttime'] = self._formatRawTime(item.get('starttime', ''))
+
+            if end_dt:
+                item_copy['display_endtime'] = end_dt.strftime('%H:%M')
+            else:
+                item_copy['display_endtime'] = self._formatRawTime(item.get('endtime', ''))
+
+            parsed_items.append(item_copy)
+
+        # 1) Najspoľahlivejšie: nájdeme aktuálnu reláciu podľa broadcastid a zoberieme položky za ňou.
+        if current_id:
+            for idx, item in enumerate(parsed_items):
+                if str(item.get('broadcastid', '')) == current_id:
+                    return parsed_items[idx + 1:idx + 1 + limit]
+
+        # 2) Fallback: ak broadcastid v zozname nesedí, porovnaj čas.
+        # Používame >= pri konci relácie, lebo ďalšia relácia často začína presne v čase konca aktuálnej.
+        result = []
+        after_dt = current_end_dt or current_start_dt
+
+        if after_dt:
+            for item in parsed_items:
+                start_dt = item.get('_start_dt')
+                if not start_dt:
+                    continue
+                if current_end_dt:
+                    if start_dt >= current_end_dt:
+                        result.append(item)
+                elif current_start_dt:
+                    if start_dt > current_start_dt:
+                        result.append(item)
+                if len(result) >= limit:
+                    break
+
+        # 3) Posledný fallback: zober najbližšie relácie, ktoré ešte nezačali / nie sú aktuálne aktívne.
+        # Toto pomôže pri PVR addone, ktorý nevracia rovnaké broadcastid alebo má mierne iný časový formát.
+        if not result:
+            now_dt = datetime.now()
+            for item in parsed_items:
+                if item.get('isactive') is True:
+                    continue
+                start_dt = item.get('_start_dt')
+                if start_dt and start_dt >= now_dt:
+                    result.append(item)
+                if len(result) >= limit:
+                    break
+
+        return result[:limit]
 
     def getBroadcastsById(self, broadcast_ids):
         broadcasts = []
@@ -459,6 +530,10 @@ class PVRRunningAt:
         date_now = now.strftime("%m-%d-%Y")
 
         starttime = getTimeFromString(date_now + ' ' + str_starttime, '%m-%d-%Y %H:%M')
+
+        if starttime is None:
+            log('getStartTimeInterval: could not parse time: %s' % str_starttime, xbmc.LOGWARNING)
+            return (None, None, None)
 
         if now > starttime:
             starttime = starttime + timedelta(days=1)

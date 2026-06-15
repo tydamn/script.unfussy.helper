@@ -11,7 +11,8 @@ class PVRTimers:
 
     def refresh(self):
         win_home = xbmcgui.Window(10000)
-        widget_id = int(win_home.getProperty('widget_timers_id'))
+        prop = win_home.getProperty('widget_timers_id')
+        widget_id = int(prop) if prop else -1
         if widget_id == -1:
             return
         timestr = time.strftime("%Y%m%d%H%M%S", time.gmtime())
@@ -22,7 +23,7 @@ class PVRTimers:
         log("timers widget reloaded")
 
     def delTimerDialog(self, timer_id):
-        utc_offset = getUtcOffset()
+        # FIX: utc_offset sa tu načítaval ale nikde nepoužíval — odstránené
         timer = self.fetchTimer(timer_id)
         header = xbmc.getLocalizedString(19060) + '?'
         line1 = timer['title']
@@ -82,8 +83,4 @@ class PVRTimers:
                     params={ 'timerid': int(timer_id) }
                 )
 
-    def toggleTimer(self, timer_id):
-        return
-        #query = json_call('PVR.ToggleTimer',
-        #            params={ 'timerid': int(timer_id) }
-        #        )
+    # FIX: toggleTimer odstránený — bol kompletne zakomentovaný mŕtvy kód
